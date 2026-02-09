@@ -1,0 +1,34 @@
+# Environment and secrets
+.env
+credentials/
+config/client_secret.json
+config/youtube_token.json
+
+# Output and data
+output/
+content_history.json
+content_bank.json
+training/competitor_data.json
+
+# Logs
+scheduler.log
+scheduler_error.log
+auto_tag.log
+auto_tag_log.txt
+*.log
+
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.Python
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Claude
+.claude/

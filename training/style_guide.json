@@ -1,0 +1,132 @@
+{
+  "niche": "fun_facts",
+  "display_name": "Fun Facts / Did You Know?",
+  "voice": {
+    "tone": "friendly-authoritative",
+    "personality": "curious science teacher who's excited to share discoveries",
+    "reading_level": "8th grade",
+    "energy": "medium-high"
+  },
+  "hooks": {
+    "templates": [
+      "Did you know that {fact}?",
+      "Scientists still can't explain why {mystery}.",
+      "This is the only {thing} in the world that {does_what}.",
+      "You've been lied to about {topic}.",
+      "The real reason {thing} {does_what}...",
+      "99% of people don't know this about {topic}.",
+      "This one {thing} changed {outcome} forever.",
+      "What happens to {thing} will shock you."
+    ],
+    "types": {
+      "curiosity": "Make them need to know the answer",
+      "controversy": "Challenge common beliefs",
+      "revelation": "Promise secret knowledge",
+      "impossibility": "Present something that seems impossible"
+    },
+    "avoid": [
+      "clickbait that doesn't deliver",
+      "obvious facts everyone knows",
+      "overly long setups",
+      "passive voice in hooks"
+    ]
+  },
+  "vocabulary": {
+    "power_words": [
+      "actually", "secret", "discovered", "proven", "scientists",
+      "ancient", "mystery", "impossible", "shocking", "revealed",
+      "hidden", "truth", "never", "only", "first", "last",
+      "banned", "forbidden", "rare", "extinct"
+    ],
+    "forbidden": [
+      "literally", "basically", "like", "um", "uh", "you know",
+      "so yeah", "anyway", "kind of", "sort of", "pretty much",
+      "actually"
+    ],
+    "emphasis_words": [
+      "ONLY", "NEVER", "ALWAYS", "EVERY", "ZERO"
+    ]
+  },
+  "structure": {
+    "max_sentence_words": 10,
+    "target_duration": 45,
+    "min_duration": 30,
+    "max_duration": 59,
+    "sections": {
+      "hook": {
+        "duration": 5,
+        "word_count": 12,
+        "purpose": "Stop the scroll immediately"
+      },
+      "setup": {
+        "duration": 10,
+        "word_count": 25,
+        "purpose": "Context and why this matters"
+      },
+      "reveal": {
+        "duration": 20,
+        "word_count": 50,
+        "purpose": "The actual fact with proof"
+      },
+      "kicker": {
+        "duration": 10,
+        "word_count": 25,
+        "purpose": "Mind-blowing implication or CTA"
+      }
+    }
+  },
+  "content_rules": {
+    "must_be_true": true,
+    "cite_sources": true,
+    "avoid_debunked": true,
+    "prefer_visual": true,
+    "categories": [
+      "science", "history", "nature", "space", "human_body",
+      "animals", "technology", "geography", "psychology", "food"
+    ]
+  },
+  "visual_style": {
+    "text_on_screen": {
+      "keywords": true,
+      "numbers": true,
+      "comparisons": true
+    },
+    "stock_footage": [
+      "nature close-ups", "space imagery", "historical photos",
+      "animal footage", "science visualizations"
+    ],
+    "effects": [
+      "zoom on key words", "shake on reveal", "glow on numbers"
+    ]
+  },
+  "audio_style": {
+    "music": "curious/discovery vibes, building tension",
+    "sound_effects": {
+      "whoosh": "transitions between points",
+      "hit": "major reveal moments",
+      "riser": "building to the main fact"
+    },
+    "voice": {
+      "pace": "medium-fast, 150 WPM",
+      "emphasis": "numbers, key facts, mind-blowing moments"
+    }
+  },
+  "hashtags": {
+    "primary": ["#didyouknow", "#facts", "#mindblown", "#science"],
+    "secondary": ["#learning", "#education", "#interesting", "#viral"],
+    "category_specific": {
+      "science": ["#sciencefacts", "#biology", "#physics"],
+      "history": ["#historyfacts", "#history", "#ancient"],
+      "nature": ["#nature", "#animals", "#wildlife"],
+      "space": ["#space", "#astronomy", "#universe"],
+      "human_body": ["#humanbody", "#anatomy", "#health"]
+    }
+  },
+  "cta_templates": [
+    "Follow for more mind-blowing facts.",
+    "Which fact should I cover next?",
+    "Comment if you knew this already.",
+    "Save this for later.",
+    "Part 2 coming soon..."
+  ]
+}

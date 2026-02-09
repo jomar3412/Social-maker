@@ -1,0 +1,57 @@
+{
+  "version": "1.0",
+  "description": "Asset manifest with keyword tags for smart matching",
+  "assets": {
+    "backgrounds/health/banana_closeup.mp4": {
+      "keywords": ["banana", "fruit", "potassium", "yellow", "healthy"],
+      "type": "video",
+      "mood": "bright",
+      "duration": null
+    },
+    "backgrounds/health/fruits/apple_slices.jpg": {
+      "keywords": ["apple", "fruit", "fiber", "red", "healthy", "slice"],
+      "type": "image",
+      "mood": "fresh"
+    },
+    "backgrounds/health/medical/mouth_dental.mp4": {
+      "keywords": ["mouth", "teeth", "dental", "ulcer", "oral", "gum"],
+      "type": "video",
+      "mood": "medical"
+    },
+    "backgrounds/nutrition/vitamins_pills.mp4": {
+      "keywords": ["vitamin", "supplement", "pill", "nutrition", "tablet"],
+      "type": "video",
+      "mood": "clinical"
+    },
+    "backgrounds/health/heart_healthy.mp4": {
+      "keywords": ["heart", "cardiovascular", "blood", "pressure", "cardio"],
+      "type": "video",
+      "mood": "medical"
+    },
+    "backgrounds/health/vegetables/spinach_greens.jpg": {
+      "keywords": ["spinach", "greens", "vegetable", "iron", "leafy", "salad"],
+      "type": "image",
+      "mood": "fresh"
+    },
+    "backgrounds/health/fruits/berries_mix.mp4": {
+      "keywords": ["berry", "berries", "blueberry", "strawberry", "antioxidant", "fruit"],
+      "type": "video",
+      "mood": "vibrant"
+    },
+    "backgrounds/nutrition/protein_shake.mp4": {
+      "keywords": ["protein", "shake", "muscle", "workout", "fitness", "drink"],
+      "type": "video",
+      "mood": "energetic"
+    },
+    "backgrounds/health/general/wellness_lifestyle.mp4": {
+      "keywords": ["health", "wellness", "lifestyle", "healthy", "general"],
+      "type": "video",
+      "mood": "calm"
+    },
+    "backgrounds/health/general/kitchen_cooking.mp4": {
+      "keywords": ["cooking", "kitchen", "food", "preparation", "healthy", "meal"],
+      "type": "video",
+      "mood": "warm"
+    }
+  }
+}

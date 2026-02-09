@@ -1,0 +1,28 @@
+[Unit]
+Description=SoCal Maker Content Scheduler
+Documentation=https://github.com/markhuerta/socal_maker
+After=network.target
+
+[Service]
+Type=simple
+User=markhuerta
+Group=markhuerta
+WorkingDirectory=/home/markhuerta/Project/socal_maker
+Environment="PATH=/home/markhuerta/Project/socal_maker/venv/bin:/usr/local/bin:/usr/bin:/bin"
+ExecStart=/home/markhuerta/Project/socal_maker/venv/bin/python scheduler.py
+Restart=always
+RestartSec=30
+
+# Logging
+StandardOutput=append:/home/markhuerta/Project/socal_maker/scheduler.log
+StandardError=append:/home/markhuerta/Project/socal_maker/scheduler_error.log
+
+# Hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/markhuerta/Project/socal_maker
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
