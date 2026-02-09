@@ -56,13 +56,14 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 """
 
 
-def _chunk_words(word_timing, words_per_chunk=4):
+def _chunk_words(word_timing, words_per_chunk=3, min_display_time=1.5):
     """
-    Group words into display chunks.
+    Group words into display chunks with proper timing.
 
     Args:
         word_timing: List of {"word": "hello", "start": 0.0, "end": 0.5}
-        words_per_chunk: Target words per subtitle chunk
+        words_per_chunk: Target words per subtitle chunk (reduced for better sync)
+        min_display_time: Minimum time each chunk stays on screen
 
     Returns:
         List of {"words": ["hello", "world"], "start": 0.0, "end": 1.0, "timing": [...]}
@@ -81,10 +82,18 @@ def _chunk_words(word_timing, words_per_chunk=4):
 
         if is_sentence_end or is_chunk_full:
             if current_chunk:
+                start_time = current_timing[0]["start"]
+                end_time = current_timing[-1]["end"]
+
+                # Ensure minimum display time
+                actual_duration = end_time - start_time
+                if actual_duration < min_display_time:
+                    end_time = start_time + min_display_time
+
                 chunks.append({
                     "words": current_chunk,
-                    "start": current_timing[0]["start"],
-                    "end": current_timing[-1]["end"],
+                    "start": start_time,
+                    "end": end_time,
                     "timing": current_timing,
                 })
                 current_chunk = []
@@ -92,10 +101,18 @@ def _chunk_words(word_timing, words_per_chunk=4):
 
     # Don't forget remaining words
     if current_chunk:
+        start_time = current_timing[0]["start"]
+        end_time = current_timing[-1]["end"]
+
+        # Ensure minimum display time for last chunk
+        actual_duration = end_time - start_time
+        if actual_duration < min_display_time:
+            end_time = start_time + min_display_time
+
         chunks.append({
             "words": current_chunk,
-            "start": current_timing[0]["start"],
-            "end": current_timing[-1]["end"],
+            "start": start_time,
+            "end": end_time,
             "timing": current_timing,
         })
 
@@ -136,7 +153,8 @@ def _build_chunk_text(chunk, keywords):
 
 def generate_subtitles(word_timing, keywords=None, output_path=None,
                        video_width=1080, video_height=1920,
-                       words_per_chunk=4, fade_duration=0.15):
+                       words_per_chunk=3, fade_duration=0.15,
+                       pre_roll=0.1, post_roll=0.3):
     """
     Generate an ASS subtitle file from word timing data.
 
@@ -148,6 +166,8 @@ def generate_subtitles(word_timing, keywords=None, output_path=None,
         video_height: Video height in pixels
         words_per_chunk: Number of words per subtitle chunk
         fade_duration: Duration of fade-in effect in seconds
+        pre_roll: Seconds to show text BEFORE the word is spoken
+        post_roll: Seconds to keep text on screen AFTER the word ends
 
     Returns:
         Path to the generated .ass file
@@ -170,8 +190,12 @@ def generate_subtitles(word_timing, keywords=None, output_path=None,
 
     # Generate dialogue lines
     for chunk in chunks:
-        start_time = _format_ass_time(chunk["start"])
-        end_time = _format_ass_time(chunk["end"])
+        # Apply pre-roll (show text slightly early) and post-roll (keep text longer)
+        adjusted_start = max(0, chunk["start"] - pre_roll)
+        adjusted_end = chunk["end"] + post_roll
+
+        start_time = _format_ass_time(adjusted_start)
+        end_time = _format_ass_time(adjusted_end)
 
         # Build text with keyword highlighting
         text = _build_chunk_text(chunk, keywords_set)

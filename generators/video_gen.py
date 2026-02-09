@@ -300,8 +300,10 @@ def assemble_video(voice_path, output_path=None, music_path=None, content_type="
 
     # Get voiceover duration
     voice_duration = _get_audio_duration(voice_path)
-    # Add padding (1s intro + 1s outro)
-    total_duration = min(voice_duration + 2, VIDEO_MAX_DURATION)
+    # Add padding (1s intro + 3s outro for fade out)
+    INTRO_PADDING = 1.0
+    OUTRO_PADDING = 3.0
+    total_duration = min(voice_duration + INTRO_PADDING + OUTRO_PADDING, VIDEO_MAX_DURATION)
 
     # Get background music
     if music_path is None:
@@ -390,16 +392,20 @@ def assemble_video(voice_path, output_path=None, music_path=None, content_type="
         filter_parts.append("[vbase]copy[vfinal]")
 
     # Build audio filter
-    # Delay voiceover by 1 second (intro padding)
-    audio_filters = [f"[{voice_input_idx}:a]adelay=1000|1000[voice]"]
+    # Delay voiceover by 1 second (intro padding) and add fade out
+    voice_fade_start = voice_duration + 0.5  # Start fade slightly after voice ends
+    audio_filters = [f"[{voice_input_idx}:a]adelay=1000|1000,afade=t=out:st={voice_fade_start}:d=1.5[voice]"]
 
     if music_input_idx is not None:
+        # Music: fade in at start, fade out at end (2 second fade)
+        music_fade_start = total_duration - 2.5
         audio_filters.append(
-            f"[{music_input_idx}:a]atrim=0:{total_duration},afade=t=in:d=1,afade=t=out:st={total_duration-1}:d=1,volume={MUSIC_VOLUME}[music]"
+            f"[{music_input_idx}:a]atrim=0:{total_duration},afade=t=in:d=1.5,afade=t=out:st={music_fade_start}:d=2.5,volume={MUSIC_VOLUME}[music]"
         )
-        audio_filters.append("[voice][music]amix=inputs=2:duration=first:dropout_transition=2[afinal]")
+        # Mix voice and music, then add final fade out
+        audio_filters.append(f"[voice][music]amix=inputs=2:duration=longest:dropout_transition=2,afade=t=out:st={total_duration-2}:d=2[afinal]")
     else:
-        audio_filters.append("[voice]acopy[afinal]")
+        audio_filters.append(f"[voice]afade=t=out:st={total_duration-2}:d=2[afinal]")
 
     # Combine all filters
     filter_complex = ";".join(filter_parts + audio_filters)
@@ -472,16 +478,17 @@ def _assemble_video_simple(voice_path, output_path, music_path, content_type,
     else:
         video_filter += ";[v]copy[vfinal]"
 
-    # Audio setup
+    # Audio setup with fade out
     audio_filter = "[1:a]adelay=1000|1000[voice]"
     if music_path:
+        music_fade_start = total_duration - 2.5
         audio_filter += (
-            f";[2:a]atrim=0:{total_duration},volume={MUSIC_VOLUME}[music]"
-            ";[voice][music]amix=inputs=2:duration=first:dropout_transition=2[afinal]"
+            f";[2:a]atrim=0:{total_duration},afade=t=in:d=1.5,afade=t=out:st={music_fade_start}:d=2.5,volume={MUSIC_VOLUME}[music]"
+            f";[voice][music]amix=inputs=2:duration=longest:dropout_transition=2,afade=t=out:st={total_duration-2}:d=2[afinal]"
         )
         audio_inputs = ["-i", str(voice_path), "-i", str(music_path)]
     else:
-        audio_filter += ";[voice]acopy[afinal]"
+        audio_filter += f";[voice]afade=t=out:st={total_duration-2}:d=2[afinal]"
         audio_inputs = ["-i", str(voice_path)]
 
     cmd = [
