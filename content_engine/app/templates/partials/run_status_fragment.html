@@ -14,6 +14,22 @@
     </a>
 </div>
 
+{% elif stage == "awaiting_video_clips" %}
+<!-- Waiting for Video Clips -->
+<div class="glass-card rounded-2xl p-8 text-center">
+    <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-yellow-500/20 flex items-center justify-center">
+        <svg class="w-8 h-8 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/>
+        </svg>
+    </div>
+    <h2 class="text-xl font-semibold text-yellow-300 mb-2">Waiting for Video Clips</h2>
+    <p class="text-gray-400 text-sm mb-4">Visual prompts are ready. Generate clips in your video tool, then drop them into the run folder.</p>
+    <a href="/runs/{{ run_id }}/artifacts"
+       class="btn-primary inline-block text-white px-8 py-3 rounded-xl font-medium">
+        View Clip Prompts
+    </a>
+</div>
+
 {% elif stage == "complete" %}
 <!-- Complete with Artifacts -->
 <div class="glass-card rounded-2xl p-8">
@@ -134,16 +150,18 @@
     {% endif %}
 
     <!-- Post-approval Stages -->
-    {% if stage in ["script_approved", "generating_shot_list", "generating_visuals", "generating_stock_queries"] %}
+    {% if stage in ["script_approved", "generating_shot_list", "generating_visuals", "generating_stock_queries", "awaiting_video_clips", "generating_video_clips", "video_clips_ready", "video_assembly"] %}
     <div class="space-y-3 mb-6">
-        {% set post_stages = ["script_approved", "generating_shot_list", "generating_visuals", "generating_stock_queries"] %}
+        {% set post_stages = ["script_approved", "generating_shot_list", "generating_visuals", "generating_stock_queries", "awaiting_video_clips", "video_assembly"] %}
         {% set post_names = {
             "script_approved": "Script Approved",
             "generating_shot_list": "Generating Shot List",
             "generating_visuals": "Creating Visual Prompts",
-            "generating_stock_queries": "Building Stock Queries"
+            "generating_stock_queries": "Building Stock Queries",
+            "awaiting_video_clips": "Waiting for Video Clips",
+            "video_assembly": "Assembling Video"
         } %}
-        {% set current_idx = post_stages.index(stage) if stage in post_stages else -1 %}
+        {% set current_idx = post_stages.index(stage) if stage in post_stages else (post_stages|length - 1) %}
 
         {% for s in post_stages %}
         {% set idx = loop.index0 %}

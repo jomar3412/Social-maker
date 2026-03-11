@@ -321,13 +321,31 @@ def create_app() -> FastAPI:
         if record.output_path:
             output_dir = Path(record.output_path)
 
-            script_path = output_dir / "script.json"
-            if script_path.exists():
-                script_data = json.loads(script_path.read_text())
+            # Load script: check script.txt first (pipeline output), fall back to script.json
+            txt_path = output_dir / "script.txt"
+            json_path = output_dir / "script.json"
+            meta_path = output_dir / "script_meta.json"
+
+            if txt_path.exists():
+                script_text = txt_path.read_text().strip()
+            elif json_path.exists():
+                script_data = json.loads(json_path.read_text())
                 script_text = script_data.get("script", "")
+
+            # Load hook from script_meta.json if available, else fall back to script.json
+            if meta_path.exists():
+                meta = json.loads(meta_path.read_text())
+                hook_text = meta.get("hook", "")
+                duration_estimate = meta.get("duration_estimate", 0)
+            elif json_path.exists() and not script_text:
+                script_data = json.loads(json_path.read_text())
                 hook_text = script_data.get("hook", "")
+
+            if script_text and not duration_estimate:
                 word_count = len(script_text.split())
-                duration_estimate = (word_count / 150) * 60  # ~150 wpm
+                duration_estimate = (word_count / 150) * 60
+            elif script_text:
+                word_count = len(script_text.split())
 
         # Check for existing voice files
         voice_exists = False

@@ -2867,23 +2867,26 @@ async def generate_voice(request: Request, run_id: str):
     import json
 
     output_dir = Path(record.output_path)
-    script_path = output_dir / "script.json"
 
-    if not script_path.exists():
-        raise HTTPException(status_code=400, detail="Script file not found")
-
-    script_data = json.loads(script_path.read_text())
-    script_text = script_data.get("script", "")
+    # Check script.txt first (pipeline output), fall back to script.json
+    txt_path = output_dir / "script.txt"
+    json_path = output_dir / "script.json"
+    script_text = ""
+    if txt_path.exists():
+        script_text = txt_path.read_text().strip()
+    elif json_path.exists():
+        script_data = json.loads(json_path.read_text())
+        script_text = script_data.get("script", "")
 
     if not script_text:
-        raise HTTPException(status_code=400, detail="Script is empty")
+        raise HTTPException(status_code=400, detail="Script file not found or empty")
 
     # Get scenes for timestamps
     shot_list_path = output_dir / "shot_list.json"
     scenes = None
     if shot_list_path.exists():
         shot_data = json.loads(shot_list_path.read_text())
-        scenes = shot_data.get("scenes", [])
+        scenes = shot_data if isinstance(shot_data, list) else shot_data.get("shot_list", [])
 
     # Get voice preset from config
     voice_preset = record.config.get("voice_preset", "deep_motivational")
@@ -2910,14 +2913,29 @@ async def generate_voice(request: Request, run_id: str):
 
     if is_htmx_request(request):
         if result.success:
-            return HTMLResponse(
-                f'<div class="alert-success rounded-lg p-3 text-sm text-green-400">'
-                f'Voice generated successfully! Duration: {result.duration_seconds:.1f}s</div>'
+            return templates.TemplateResponse(
+                "partials/voice_result.html",
+                {
+                    "request": request,
+                    "run_id": run_id,
+                    "success": True,
+                    "duration_seconds": result.duration_seconds,
+                    "audio_path": str(result.audio_path) if result.audio_path else None,
+                    "scene_timestamps": [t.to_dict() for t in result.scene_timestamps],
+                },
             )
         else:
-            return HTMLResponse(
-                f'<div class="alert-error rounded-lg p-3 text-sm text-red-400">'
-                f'{result.error_message}</div>'
+            return templates.TemplateResponse(
+                "partials/voice_result.html",
+                {
+                    "request": request,
+                    "run_id": run_id,
+                    "success": False,
+                    "error_message": result.error_message,
+                    "duration_seconds": 0,
+                    "audio_path": None,
+                    "scene_timestamps": [],
+                },
             )
 
     return result.to_dict()
@@ -2941,13 +2959,19 @@ async def regenerate_voice(request: Request, run_id: str):
     import json
 
     output_dir = Path(record.output_path)
-    script_path = output_dir / "script.json"
 
-    if not script_path.exists():
-        raise HTTPException(status_code=400, detail="Script file not found")
+    # Check script.txt first (pipeline output), fall back to script.json
+    txt_path = output_dir / "script.txt"
+    json_path = output_dir / "script.json"
+    script_text = ""
+    if txt_path.exists():
+        script_text = txt_path.read_text().strip()
+    elif json_path.exists():
+        script_data = json.loads(json_path.read_text())
+        script_text = script_data.get("script", "")
 
-    script_data = json.loads(script_path.read_text())
-    script_text = script_data.get("script", "")
+    if not script_text:
+        raise HTTPException(status_code=400, detail="Script file not found or empty")
 
     # Parse form data for settings/notes
     form_data = await request.form()

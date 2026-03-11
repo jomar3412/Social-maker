@@ -182,6 +182,11 @@ STAGE_INFO = {
     "generating_shot_list": {"name": "Generating Shot List", "progress": 40},
     "generating_visuals": {"name": "Creating Visual Prompts", "progress": 70},
     "generating_stock_queries": {"name": "Building Stock Queries", "progress": 90},
+    # Video clip stages
+    "awaiting_video_clips": {"name": "Waiting for Video Clips", "progress": 95},
+    "generating_video_clips": {"name": "Generating Video Clips", "progress": 96},
+    "video_clips_ready": {"name": "Video Clips Ready", "progress": 97},
+    "video_assembly": {"name": "Assembling Video", "progress": 98},
     # Terminal
     "complete": {"name": "Complete", "progress": 100},
     "failed": {"name": "Failed", "progress": 0},

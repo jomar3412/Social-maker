@@ -1,0 +1,75 @@
+{% if success %}
+<!-- Voice Generation Success -->
+<div class="glass-card rounded-xl p-5 mt-2">
+    <!-- Header -->
+    <div class="flex items-center gap-3 mb-4">
+        <div class="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0">
+            <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+        </div>
+        <div>
+            <p class="text-green-300 font-medium text-sm">Voice Generated</p>
+            <p class="text-gray-500 text-xs">{{ duration_seconds | round(1) }}s &middot; ElevenLabs TTS</p>
+        </div>
+    </div>
+
+    <!-- Audio Player -->
+    {% if audio_path and audio_path.endswith('.mp3') %}
+    <div class="mb-4">
+        <audio controls class="w-full" style="height:36px; filter: invert(0.85) hue-rotate(180deg);">
+            <source src="/api/runs/{{ run_id }}/voice/audio" type="audio/mpeg">
+            Your browser does not support the audio element.
+        </audio>
+    </div>
+    {% endif %}
+
+    <!-- Scene Timestamps -->
+    {% if scene_timestamps %}
+    <div>
+        <p class="text-xs text-gray-500 uppercase tracking-wider mb-2">Scene Timestamps</p>
+        <div class="space-y-1.5">
+            {% for ts in scene_timestamps %}
+            <div class="flex items-center justify-between text-xs">
+                <span class="text-gray-400 font-mono">
+                    S{{ ts.scene_number }}
+                    {% if ts.beat_type %}
+                    <span class="text-gray-600 ml-1">[{{ ts.beat_type }}]</span>
+                    {% endif %}
+                </span>
+                <span class="text-gray-500 font-mono tabular-nums">
+                    {{ "%.1f"|format(ts.start_time) }}s &rarr; {{ "%.1f"|format(ts.end_time) }}s
+                </span>
+                <span class="text-gray-600 font-mono tabular-nums w-12 text-right">
+                    {{ "%.1f"|format(ts.duration) }}s
+                </span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Approve Button -->
+    <div class="mt-4 pt-4 border-t border-white/5">
+        <button hx-post="/api/runs/{{ run_id }}/voice/approve"
+                hx-swap="none"
+                class="btn-primary w-full text-white px-4 py-2 rounded-lg text-sm font-medium">
+            Approve &amp; Continue to Visuals
+        </button>
+    </div>
+</div>
+
+{% else %}
+<!-- Voice Generation Error -->
+<div class="rounded-xl p-4 mt-2" style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2);">
+    <div class="flex items-start gap-3">
+        <svg class="w-4 h-4 text-red-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+        <div>
+            <p class="text-red-300 text-sm font-medium">Generation Failed</p>
+            <p class="text-red-400/70 text-xs mt-1">{{ error_message or "An error occurred." }}</p>
+        </div>
+    </div>
+</div>
+{% endif %}
