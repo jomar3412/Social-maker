@@ -1,4 +1,4 @@
-# SoCal Maker - Automated Content Factory
+# Social Maker - Automated Content Factory
 
 Automated faceless content generation for social media (YouTube Shorts, TikTok, Instagram Reels).
 
