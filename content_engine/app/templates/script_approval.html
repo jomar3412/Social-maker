@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}Content Engine - Approve Script{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-2xl font-semibold tracking-tight">{{ display_title or "Script Approval" }}</h1>
+            <p class="text-gray-500 text-sm mt-1 font-mono">{{ run_id }}</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <a href="/wizard/feedback/{{ run_id }}"
+               class="text-blue-400 hover:text-blue-300 text-sm">
+                Post-Publish Review &rarr;
+            </a>
+            <span class="badge-pending px-3 py-1.5 rounded-full text-xs font-medium">
+                {{ stage }}
+            </span>
+        </div>
+    </div>
+
+    <!-- Progress -->
+    <div class="mb-8">
+        <div class="flex justify-between text-xs text-gray-500 mb-2">
+            <span>Progress</span>
+            <span>Stage 5 of 6</span>
+        </div>
+        <div class="progress-track h-1.5 rounded-full">
+            <div class="progress-fill h-full rounded-full" style="width: 83%"></div>
+        </div>
+    </div>
+
+    <!-- Script Preview -->
+    <div class="glass-card rounded-2xl p-6 mb-6">
+        <!-- Hook highlight -->
+        <div class="mb-5">
+            <label class="text-xs font-medium text-gray-500 mb-2 block uppercase tracking-wider">Hook</label>
+            <div class="hook-highlight rounded-xl p-4 text-lg font-medium text-white">
+                {{ hook }}
+            </div>
+        </div>
+
+        <!-- Full script -->
+        <div>
+            <label class="text-xs font-medium text-gray-500 mb-2 block uppercase tracking-wider">Full Script</label>
+            <div class="script-box rounded-xl p-5 text-sm text-gray-300 whitespace-pre-wrap max-h-80 overflow-y-auto">{{ script }}</div>
+        </div>
+
+        <!-- Metadata -->
+        <div class="mt-5 pt-4 border-t border-white/5 flex gap-3">
+            <span class="text-xs text-gray-500 bg-white/5 px-2.5 py-1 rounded-full">{{ niche }}</span>
+            <span class="text-xs text-gray-500 bg-white/5 px-2.5 py-1 rounded-full">{{ style }}</span>
+        </div>
+    </div>
+
+    <!-- Notes Section -->
+    <div class="glass-card rounded-2xl p-6 mb-6">
+        <div class="flex items-center justify-between mb-3">
+            <label class="text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</label>
+            <div id="notes-save-result"></div>
+        </div>
+        <textarea id="notes-input"
+                  name="notes"
+                  rows="3"
+                  data-dictation
+                  placeholder="Add notes about this run..."
+                  class="input-glass w-full rounded-lg px-4 py-3 text-gray-100 resize-none text-sm">{{ notes }}</textarea>
+        <div class="mt-3 flex justify-end">
+            <button hx-put="/api/runs/{{ run_id }}/notes"
+                    hx-target="#notes-save-result"
+                    hx-include="#notes-input"
+                    class="btn-secondary text-gray-300 py-2 px-4 rounded-lg text-sm font-medium">
+                Save Notes
+            </button>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    {% if stage == "awaiting_script_approval" %}
+    <div class="flex gap-3">
+        <!-- Approve & Continue -->
+        <button id="approve-btn"
+                hx-post="/api/pipeline/approve/script/{{ run_id }}"
+                hx-indicator="#approve-loading"
+                class="btn-success flex-1 text-white py-3.5 rounded-xl font-medium flex items-center justify-center gap-2">
+            <span id="approve-loading" class="htmx-indicator">
+                <div class="spinner"></div>
+            </span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            <span>Approve & Generate Artifacts</span>
+        </button>
+
+        <!-- Regenerate -->
+        <button id="regen-btn"
+                hx-post="/api/pipeline/regenerate/script/{{ run_id }}"
+                hx-target="#action-result"
+                hx-indicator="#regen-loading"
+                class="btn-secondary text-gray-300 py-3.5 px-6 rounded-xl font-medium flex items-center justify-center gap-2">
+            <span id="regen-loading" class="htmx-indicator">
+                <div class="spinner"></div>
+            </span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+            <span>Regen</span>
+        </button>
+    </div>
+    {% else %}
+    <!-- Already approved -->
+    <div class="flex gap-3">
+        <a href="/runs/{{ run_id }}/status"
+           class="btn-primary flex-1 text-white py-3.5 rounded-xl font-medium text-center">
+            View Status
+        </a>
+        <a href="/wizard/feedback/{{ run_id }}"
+           class="btn-secondary text-gray-300 py-3.5 px-6 rounded-xl font-medium text-center">
+            Add Feedback
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- Action result -->
+    <div id="action-result" class="mt-6"></div>
+
+    <!-- Output path -->
+    {% if output_path %}
+    <div class="mt-8 text-center">
+        <code class="code-block text-xs text-gray-500 px-3 py-2 rounded-lg inline-block">{{ output_path }}</code>
+    </div>
+    {% endif %}
+</div>
+
+<!-- HTMX handles response swapping; HTML partials include all UI and redirect logic -->
+{% endblock %}

@@ -1,0 +1,26 @@
+{
+  "version": "1.0.0",
+  "last_updated": null,
+  "positive_patterns": [],
+  "negative_patterns": [],
+  "neutral_patterns": [],
+  "pattern_schema": {
+    "id": "string - unique identifier",
+    "type": "positive|negative|neutral",
+    "category": "hook|script|visual|dopamine|engagement",
+    "description": "string - what the pattern is",
+    "evidence": {
+      "run_ids": ["list of runs where pattern was observed"],
+      "occurrence_count": "number",
+      "avg_performance_delta": "number - % change vs baseline"
+    },
+    "scope": {
+      "niche": "string|null - specific niche or null for global",
+      "style": "string|null - specific style or null for global",
+      "visual_mode": "string|null - specific mode or null for global"
+    },
+    "confidence": "low|medium|high",
+    "discovered_at": "ISO date",
+    "last_seen": "ISO date"
+  }
+}

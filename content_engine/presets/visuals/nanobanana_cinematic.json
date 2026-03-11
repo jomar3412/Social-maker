@@ -1,0 +1,38 @@
+{
+  "name": "nanobanana_cinematic",
+  "display_name": "NanoBanana AI (Cinematic)",
+  "description": "AI-generated cinematic visuals using NanoBanana/VEO with ultra-detailed prompts",
+  "tags": ["ai-generated", "cinematic", "custom", "veo"],
+  "mode": "nanobanana",
+  "generation": {
+    "model": "veo-2.0",
+    "resolution": "1080x1920",
+    "aspect_ratio": "9:16",
+    "duration_per_scene": 8,
+    "fps": 24
+  },
+  "style": {
+    "cinematic": true,
+    "color_grading": "filmic",
+    "camera_movement": "subtle drift or static",
+    "lighting": "natural or dramatic"
+  },
+  "prompt_settings": {
+    "detail_level": "ultra",
+    "min_words": 90,
+    "max_words": 180,
+    "include_camera_specs": true,
+    "include_subject_details": true,
+    "include_environment": true,
+    "include_lighting": true,
+    "include_color_style": true,
+    "include_continuity": true,
+    "include_negatives": true
+  },
+  "prompt_template": {
+    "prefix": "Cinematic 9:16 vertical video,",
+    "suffix": ", filmic color grading, 24fps, professional lighting, shallow depth of field",
+    "negative": "text overlays, watermarks, logos, distorted anatomy, extra limbs, deformed hands, blurry, low quality, pixelated, cartoon style, anime style, illustration"
+  },
+  "fallback": "stock_only"
+}

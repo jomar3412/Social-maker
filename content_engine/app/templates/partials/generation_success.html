@@ -1,0 +1,13 @@
+<div class="alert-success rounded-xl p-5 text-center"
+     hx-get="/wizard/approve/{{ run_id }}"
+     hx-trigger="load delay:500ms"
+     hx-swap="none">
+    <div class="spinner mx-auto mb-3"></div>
+    <p class="text-green-300 font-medium">Script Generated</p>
+    <p class="text-green-400/70 text-sm mt-1">Redirecting to approval...</p>
+</div>
+<script>
+    setTimeout(function() {
+        window.location.href = '/wizard/approve/{{ run_id }}';
+    }, 300);
+</script>

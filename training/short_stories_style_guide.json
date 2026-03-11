@@ -1,0 +1,252 @@
+{
+  "niche": "short_stories",
+  "display_name": "Short Stories / Storytime",
+  "voice": {
+    "tone": "narrative-immersive",
+    "personality": "masterful storyteller drawing you into the moment",
+    "reading_level": "conversational",
+    "energy": "varies by genre and scene"
+  },
+  "genres": {
+    "thriller": {
+      "description": "Suspenseful stories with tension and unexpected reveals",
+      "voice_style": "measured, building tension, whispers at key moments",
+      "energy": "medium building to high",
+      "pacing": "slow buildup, rapid climax",
+      "recommended_voice": "Ethan",
+      "music_style": "dark ambient, building tension, subtle drones",
+      "visual_style": "dark lighting, shadows, close-ups, noir aesthetic",
+      "themes": ["danger", "secrets", "betrayal", "survival", "paranoia"]
+    },
+    "mystery": {
+      "description": "Puzzle-driven stories with clues and revelations",
+      "voice_style": "thoughtful, curious, dramatic reveals",
+      "energy": "medium",
+      "pacing": "steady with strategic pauses for clues",
+      "recommended_voice": "Ethan",
+      "music_style": "curious, investigative, building intrigue",
+      "visual_style": "moody lighting, focus on details and clues",
+      "themes": ["discovery", "deception", "truth", "hidden motives", "investigation"]
+    },
+    "comedy": {
+      "description": "Light-hearted stories with humor and unexpected punchlines",
+      "voice_style": "playful, varied pace, comedic timing",
+      "energy": "high",
+      "pacing": "quick with pauses for beats",
+      "recommended_voice": "Adam",
+      "music_style": "upbeat, playful, quirky",
+      "visual_style": "bright, expressive characters, exaggerated reactions",
+      "themes": ["absurdity", "misunderstandings", "irony", "everyday situations", "relatability"]
+    },
+    "horror": {
+      "description": "Scary stories designed to unsettle and frighten",
+      "voice_style": "low, creeping dread, sudden intensity shifts",
+      "energy": "low building to sudden spikes",
+      "pacing": "slow, deliberate, sudden shocks",
+      "recommended_voice": "Ethan",
+      "music_style": "unsettling, dissonant, silence used strategically",
+      "visual_style": "dark, atmospheric, minimal visibility, implied horror",
+      "themes": ["fear", "the unknown", "isolation", "supernatural", "psychological"]
+    },
+    "drama": {
+      "description": "Emotionally driven stories with character depth",
+      "voice_style": "emotional, varied, authentic delivery",
+      "energy": "medium with emotional peaks",
+      "pacing": "natural conversation rhythm",
+      "recommended_voice": "Ethan",
+      "music_style": "emotional piano, strings, ambient",
+      "visual_style": "cinematic, expressive faces, atmospheric",
+      "themes": ["relationships", "loss", "growth", "sacrifice", "redemption"]
+    },
+    "romance": {
+      "description": "Love stories with emotional connection",
+      "voice_style": "warm, intimate, yearning",
+      "energy": "low to medium",
+      "pacing": "gentle, lingering on emotional moments",
+      "recommended_voice": "Rachel",
+      "music_style": "romantic piano, soft strings, dreamy",
+      "visual_style": "warm lighting, soft focus, intimate framing",
+      "themes": ["love", "connection", "longing", "fate", "vulnerability"]
+    }
+  },
+  "story_structure": {
+    "hook": {
+      "duration": 5,
+      "word_count": 15,
+      "purpose": "Grab attention with intrigue or shock",
+      "techniques": [
+        "Start in the middle of action",
+        "Pose an unsettling question",
+        "Introduce immediate tension",
+        "Create mystery with a strange detail"
+      ]
+    },
+    "buildup": {
+      "duration": 35,
+      "word_count": 150,
+      "purpose": "Develop character, setting, and tension",
+      "elements": [
+        "Establish character quickly",
+        "Build atmosphere",
+        "Plant subtle clues",
+        "Escalate tension naturally"
+      ]
+    },
+    "twist": {
+      "duration": 15,
+      "word_count": 50,
+      "purpose": "Deliver satisfying payoff that recontextualizes the story",
+      "types": [
+        "revelation - hidden truth exposed",
+        "reversal - expectations subverted",
+        "irony - outcome opposite of expectation",
+        "callback - earlier detail gains new meaning"
+      ]
+    }
+  },
+  "hooks": {
+    "templates": [
+      "The last text I ever got from my {person} was...",
+      "I should've known something was wrong when {event}.",
+      "The moment I opened the door, I knew I wasn't alone.",
+      "They told me the house was empty. They were wrong.",
+      "I found the note three days after {person} disappeared.",
+      "My neighbor hasn't blinked in four hours.",
+      "The phone rang at 3 AM. The caller ID showed my own number.",
+      "I don't know why I decided to look under the bed that night."
+    ],
+    "types": {
+      "mystery_hook": "Create an unanswered question that demands resolution",
+      "threat_hook": "Introduce immediate danger or unease",
+      "callback_hook": "Reference a past event that haunts the present",
+      "observation_hook": "Notice something deeply wrong in an ordinary scene"
+    },
+    "avoid": [
+      "Starting with 'Once upon a time'",
+      "Long exposition before the hook",
+      "Telling instead of showing",
+      "Generic scary phrases without specificity"
+    ]
+  },
+  "vocabulary": {
+    "power_words": [
+      "noticed", "realized", "whispered", "shadows", "silence",
+      "suddenly", "slowly", "finally", "never", "always",
+      "wrong", "strange", "familiar", "impossible", "truth"
+    ],
+    "forbidden": [
+      "literally", "basically", "like", "um", "you know",
+      "scary", "spooky", "creepy"
+    ],
+    "sensory_words": {
+      "sight": ["glimpsed", "caught", "noticed", "stared", "watched"],
+      "sound": ["whispered", "echoed", "cracked", "silence", "screamed"],
+      "touch": ["cold", "rough", "trembling", "gripped", "brushed"],
+      "smell": ["rotting", "metallic", "familiar", "stale", "sweet"]
+    }
+  },
+  "structure": {
+    "max_sentence_words": 20,
+    "target_duration": 60,
+    "min_duration": 45,
+    "max_duration": 90,
+    "target_word_count": 250,
+    "scenes_target": 10
+  },
+  "character_consistency": {
+    "description": "Rules for maintaining visual consistency across scenes",
+    "midjourney_params": {
+      "character_reference": "--cref [URL]",
+      "character_weight": "--cw 100",
+      "style_reference": "--sref [URL]",
+      "aspect_ratio": "--ar 9:16",
+      "version": "--v 6.1"
+    },
+    "character_prompt_format": "Create detailed character description first, use for all scenes",
+    "required_character_details": [
+      "age and gender",
+      "hair color and style",
+      "clothing description",
+      "distinctive features",
+      "emotional state"
+    ]
+  },
+  "visual_style": {
+    "text_on_screen": {
+      "key_phrases": true,
+      "reveal_words": true,
+      "minimal_not_cluttered": true
+    },
+    "shot_types": [
+      "establishing wide shot",
+      "medium shot for dialogue/action",
+      "close-up for emotion/detail",
+      "extreme close-up for tension",
+      "over-shoulder for conversation"
+    ],
+    "transitions": [
+      "fade_to_black",
+      "quick_cut",
+      "slow_dissolve",
+      "match_cut"
+    ],
+    "camera_movements": [
+      "slow_push_in",
+      "pull_back_reveal",
+      "static_tension",
+      "handheld_urgency"
+    ]
+  },
+  "audio_style": {
+    "music_by_genre": {
+      "thriller": "dark ambient, building tension, subtle drones",
+      "mystery": "curious, investigative, building intrigue",
+      "comedy": "upbeat, playful, quirky",
+      "horror": "unsettling, dissonant, strategic silence",
+      "drama": "emotional piano, strings, ambient",
+      "romance": "romantic piano, soft strings, dreamy"
+    },
+    "voice_directions": {
+      "narrator_default": "first-person, intimate, drawing viewer in",
+      "pacing_markers": ["[pause: short]", "[pause: medium]", "[pause: long]"],
+      "emotional_markers": ["[whisper]", "[urgent]", "[trembling]", "[calm]", "[intense]"]
+    },
+    "sound_effects": {
+      "tension": "heartbeat, breathing, creaking",
+      "reveal": "sting, impact, silence",
+      "atmosphere": "ambient, environmental, subtle"
+    }
+  },
+  "hashtags": {
+    "primary": ["#storytime", "#shortfilm", "#storytelling", "#thriller"],
+    "secondary": ["#mystery", "#plot_twist", "#scary", "#drama", "#fyp"],
+    "genre_specific": {
+      "thriller": ["#thriller", "#suspense", "#twist", "#dark"],
+      "mystery": ["#mystery", "#whodunit", "#detective", "#clues"],
+      "comedy": ["#funny", "#comedy", "#humor", "#lol"],
+      "horror": ["#horror", "#scary", "#creepy", "#nightmare"],
+      "drama": ["#drama", "#emotional", "#feelingthis", "#deep"],
+      "romance": ["#lovestory", "#romance", "#love", "#cute"]
+    }
+  },
+  "cta_templates": [
+    "Part 2?",
+    "Should I continue this story?",
+    "Comment what you think happened next.",
+    "Follow for more stories like this.",
+    "Save this for later."
+  ],
+  "ending_types": {
+    "twist": "Subvert expectations with a shocking reveal",
+    "cliffhanger": "Leave the viewer wanting more",
+    "resolution": "Provide satisfying closure",
+    "open_ended": "Leave interpretation to the viewer",
+    "callback": "Reference something from the beginning"
+  },
+  "series_rules": {
+    "episode_structure": "Each episode must work standalone but advance the series",
+    "character_reuse": "Maintain consistent character refs across episodes",
+    "story_bible": "Document world rules, character backstories, plot threads",
+    "numbering": "STORY-XXX format, series episodes share prefix"
+  }
+}

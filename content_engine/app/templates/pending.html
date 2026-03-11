@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Content Engine - Pending{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto">
+    <h1 class="text-2xl font-semibold mb-6 tracking-tight">Pending Runs</h1>
+
+    <!-- Pending Approvals -->
+    {% if pending %}
+    <div class="mb-10">
+        <h2 class="text-xs font-medium text-gray-500 mb-4 uppercase tracking-wider">Awaiting Approval</h2>
+        <div class="space-y-3">
+            {% for run in pending %}
+            <a href="/wizard/approve/{{ run.run_id }}"
+               class="glass-card card-interactive block rounded-xl p-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <span class="text-gray-100 font-medium">{{ run.display_title or run.run_id }}</span>
+                        <div class="text-xs text-gray-500 mt-1">
+                            <span class="font-mono text-gray-600">{{ run.run_id }}</span>
+                            <span class="text-gray-700 mx-1">&bull;</span>
+                            {{ run.config.niche }} / {{ run.config.style }}
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="badge-pending px-2 py-1 rounded text-xs">
+                            {{ run.stage.value }}
+                        </span>
+                        <div class="text-xs text-gray-600 mt-1.5">
+                            {{ run.created_at[:16] }}
+                        </div>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <div class="glass-card rounded-2xl p-10 text-center mb-10">
+        <svg class="w-12 h-12 text-gray-700 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <p class="text-gray-500 mb-5">No runs awaiting approval</p>
+        <a href="/wizard" class="btn-primary inline-block text-white px-6 py-2.5 rounded-lg text-sm">
+            Start New Run
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- Recent Runs -->
+    {% if recent %}
+    <div>
+        <h2 class="text-xs font-medium text-gray-500 mb-4 uppercase tracking-wider">Recent Runs</h2>
+        <div class="space-y-2">
+            {% for run in recent %}
+            <a href="/wizard/approve/{{ run.run_id }}"
+               class="bg-white/[0.02] border border-white/5 rounded-lg px-4 py-3 block hover:bg-white/[0.04] transition-colors">
+                <div class="flex items-center justify-between text-sm">
+                    <div>
+                        <span class="text-gray-300">{{ run.display_title or run.run_id }}</span>
+                        <div class="text-xs text-gray-600 mt-0.5">
+                            <span class="font-mono">{{ run.run_id }}</span>
+                            <span class="mx-1">&bull;</span>
+                            {{ run.config.niche }}
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <a href="/wizard/feedback/{{ run.run_id }}"
+                           class="text-blue-400 hover:text-blue-300 text-xs"
+                           onclick="event.stopPropagation();">
+                            Review
+                        </a>
+                        {% if run.stage.value == 'complete' %}
+                        <span class="badge-success px-2 py-0.5 rounded text-xs">complete</span>
+                        {% elif run.stage.value == 'failed' %}
+                        <span class="badge-error px-2 py-0.5 rounded text-xs">failed</span>
+                        {% else %}
+                        <span class="text-gray-500 text-xs">{{ run.stage.value }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

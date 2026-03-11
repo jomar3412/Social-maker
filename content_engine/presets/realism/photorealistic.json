@@ -1,0 +1,44 @@
+{
+  "name": "photorealistic",
+  "display_name": "Photorealistic",
+  "description": "Maximum realism for AI-generated content",
+  "tags": ["photorealistic", "high-quality", "detailed"],
+  "ai_generation": {
+    "steps": 50,
+    "cfg_scale": 5,
+    "sampler": "dpm_2_ancestral"
+  },
+  "quality": {
+    "output_resolution": "1080x1920",
+    "bitrate": "12M",
+    "fps": 24
+  },
+  "processing": {
+    "upscale": true,
+    "upscale_factor": 1.5,
+    "denoise": true,
+    "denoise_strength": 0.3,
+    "color_correct": true,
+    "sharpening": true
+  },
+  "prompt_modifiers": [
+    "photorealistic",
+    "hyperrealistic",
+    "8k uhd",
+    "film grain",
+    "cinematic lighting",
+    "professional photography",
+    "detailed skin texture",
+    "ray tracing"
+  ],
+  "negative_modifiers": [
+    "cartoon",
+    "anime",
+    "illustration",
+    "painting",
+    "drawing",
+    "sketch",
+    "plastic",
+    "artificial"
+  ]
+}

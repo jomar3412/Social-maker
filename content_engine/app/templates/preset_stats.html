@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block title %}Content Engine - Preset Stats{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-2xl font-semibold tracking-tight">{{ preset_type|title }}: {{ preset_name|title }}</h1>
+            <p class="text-gray-500 text-sm mt-1">Aggregated performance and tuning</p>
+        </div>
+        <a href="/wizard/presets" class="text-blue-400 hover:text-blue-300 text-sm">
+            &larr; All Presets
+        </a>
+    </div>
+
+    <!-- Stats Summary -->
+    <div class="glass-card rounded-2xl p-6 mb-6">
+        <h2 class="text-lg font-medium text-gray-200 mb-4">Performance Summary</h2>
+
+        {% if stats.total_runs > 0 %}
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="text-center p-4 bg-white/5 rounded-xl">
+                <div class="text-2xl font-bold text-gray-100">{{ stats.total_runs }}</div>
+                <div class="text-xs text-gray-500 uppercase tracking-wider mt-1">Total Runs</div>
+            </div>
+
+            <div class="text-center p-4 bg-white/5 rounded-xl">
+                <div class="text-2xl font-bold text-yellow-400">
+                    {% if stats.avg_script_quality %}
+                    {{ "%.1f"|format(stats.avg_script_quality) }}
+                    {% else %}
+                    -
+                    {% endif %}
+                </div>
+                <div class="text-xs text-gray-500 uppercase tracking-wider mt-1">Script Quality</div>
+            </div>
+
+            <div class="text-center p-4 bg-white/5 rounded-xl">
+                <div class="text-2xl font-bold text-green-400">
+                    {% if stats.avg_hook_strength %}
+                    {{ "%.1f"|format(stats.avg_hook_strength) }}
+                    {% else %}
+                    -
+                    {% endif %}
+                </div>
+                <div class="text-xs text-gray-500 uppercase tracking-wider mt-1">Hook Strength</div>
+            </div>
+
+            <div class="text-center p-4 bg-white/5 rounded-xl">
+                <div class="text-2xl font-bold text-blue-400">
+                    {% if stats.avg_visual_match %}
+                    {{ "%.1f"|format(stats.avg_visual_match) }}
+                    {% else %}
+                    -
+                    {% endif %}
+                </div>
+                <div class="text-xs text-gray-500 uppercase tracking-wider mt-1">Visual Match</div>
+            </div>
+        </div>
+
+        <!-- Common Tags -->
+        {% if stats.common_tags %}
+        <div>
+            <h3 class="text-sm font-medium text-gray-400 mb-3">Frequent Tags</h3>
+            <div class="flex flex-wrap gap-2">
+                {% for tag in stats.common_tags %}
+                <span class="px-3 py-1.5 rounded-full text-sm bg-white/5 border border-white/10 text-gray-400">
+                    {{ tag }}
+                </span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="text-center py-8 text-gray-500">
+            <p>No feedback data yet for this preset.</p>
+            <p class="text-sm mt-2">Complete some runs and add feedback to see stats.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Tuning Memo -->
+    <div class="glass-card rounded-2xl p-6 mb-6">
+        <div class="flex items-center justify-between mb-4">
+            <div>
+                <h2 class="text-lg font-medium text-gray-200">Tuning Memo</h2>
+                <p class="text-gray-500 text-sm mt-1">
+                    Optional guidance to append to future script prompts
+                </p>
+            </div>
+            <label class="flex items-center gap-2 text-sm text-gray-400 cursor-pointer">
+                <input type="checkbox" id="use-tuning-memo" class="rounded bg-white/10 border-white/20"
+                       {% if tuning.memo_text %}checked{% endif %}>
+                <span>Active</span>
+            </label>
+        </div>
+
+        <form hx-put="/api/presets/{{ preset_type }}/{{ preset_name }}/tuning"
+              hx-target="#tuning-save-result">
+            <textarea name="memo_text"
+                      rows="5"
+                      placeholder="E.g., 'For this niche, hooks work best when they start with a question. Avoid overly aggressive CTAs. Keep scripts under 45 seconds.'"
+                      class="input-glass w-full rounded-lg px-4 py-3 text-gray-100 resize-none text-sm">{{ tuning.memo_text or '' }}</textarea>
+
+            <div class="mt-4 flex items-center justify-between">
+                <div id="tuning-save-result"></div>
+                <button type="submit"
+                        class="btn-primary text-white py-2 px-6 rounded-lg text-sm font-medium">
+                    Save Tuning Memo
+                </button>
+            </div>
+        </form>
+
+        {% if tuning.updated_at %}
+        <p class="text-gray-600 text-xs mt-4">
+            Last updated: {{ tuning.updated_at[:16] }}
+        </p>
+        {% endif %}
+    </div>
+
+    <!-- Usage Instructions -->
+    <div class="glass-card rounded-2xl p-6">
+        <h2 class="text-lg font-medium text-gray-200 mb-3">How Tuning Memos Work</h2>
+        <ul class="text-gray-400 text-sm space-y-2">
+            <li class="flex gap-2">
+                <span class="text-blue-400">1.</span>
+                <span>The tuning memo is appended to the script generation prompt when "Active" is checked.</span>
+            </li>
+            <li class="flex gap-2">
+                <span class="text-blue-400">2.</span>
+                <span>Stats update automatically when you add feedback to runs using this preset.</span>
+            </li>
+            <li class="flex gap-2">
+                <span class="text-blue-400">3.</span>
+                <span>Use insights from common tags and ratings to refine the memo over time.</span>
+            </li>
+            <li class="flex gap-2">
+                <span class="text-blue-400">4.</span>
+                <span>Keep memos concise - 2-3 actionable guidelines work best.</span>
+            </li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

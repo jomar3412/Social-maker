@@ -1,0 +1,51 @@
+{
+  "name": "future_accountability",
+  "display_name": "Future Accountability",
+  "description": "Making viewer think about their future self",
+  "tags": ["reflection", "future", "decisions", "accountability"],
+  "voice_style": "measured, serious, reflective",
+  "energy": "medium",
+  "example_openers": [
+    "One year from today...",
+    "Remember this: a year isn't 365 days.",
+    "Future you is watching right now."
+  ],
+  "themes": ["future self", "decisions matter", "time passing", "no regrets"],
+  "beat_config": {
+    "HOOK": {
+      "min_duration": 2.0,
+      "max_duration": 4.0,
+      "mood_keywords": ["future", "year", "time", "watching"]
+    },
+    "TENSION": {
+      "min_duration": 4.0,
+      "max_duration": 8.0,
+      "mood_keywords": ["wasted", "regret", "missed", "lost"]
+    },
+    "SHIFT": {
+      "min_duration": 2.0,
+      "max_duration": 4.0,
+      "mood_keywords": ["but", "choice", "decide", "still"]
+    },
+    "CLIMB": {
+      "min_duration": 6.0,
+      "max_duration": 12.0,
+      "mood_keywords": ["build", "invest", "create", "become"]
+    },
+    "RESOLUTION": {
+      "min_duration": 3.0,
+      "max_duration": 6.0,
+      "mood_keywords": ["thank", "proud", "legacy", "future"]
+    },
+    "CTA": {
+      "min_duration": 2.0,
+      "max_duration": 4.0,
+      "mood_keywords": ["start", "today", "now", "decide"]
+    }
+  },
+  "audio": {
+    "music": "building cinematic, subtle tension",
+    "voice_direction": "measured, serious, reflective pauses"
+  },
+  "hashtags": ["#futureself", "#accountability", "#decisions"]
+}

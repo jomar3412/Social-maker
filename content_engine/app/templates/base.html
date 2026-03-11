@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Content Engine{% endblock %}</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+
+    <style>
+        /* === CINEMATIC MINIMAL THEME === */
+
+        :root {
+            --glow-blue: rgba(59, 130, 246, 0.5);
+            --glow-green: rgba(34, 197, 94, 0.5);
+            --glass-bg: rgba(17, 24, 39, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.08);
+        }
+
+        /* Gradient background */
+        body {
+            background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #0f1922 100%);
+            min-height: 100vh;
+        }
+
+        /* Subtle animated gradient overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                radial-gradient(ellipse at 20% 20%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(139, 92, 246, 0.06) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* Glass card effect */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            box-shadow:
+                0 8px 32px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        /* Form inputs - clean glass style */
+        .input-glass {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.2s ease;
+        }
+
+        .input-glass:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        .input-glass:focus {
+            outline: none;
+            border-color: rgba(59, 130, 246, 0.5);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15), 0 0 20px rgba(59, 130, 246, 0.1);
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        /* Select dropdown styling */
+        select.input-glass {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 20px;
+            padding-right: 44px;
+        }
+
+        select.input-glass option {
+            background: #1a1a2e;
+            color: #e5e7eb;
+            padding: 12px;
+        }
+
+        /* Primary button with glow */
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 25px rgba(59, 130, 246, 0.4), 0 0 30px rgba(59, 130, 246, 0.2);
+        }
+
+        .btn-primary:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .btn-primary:disabled {
+            background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+            border-color: rgba(75, 85, 99, 0.3);
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        /* Success button with glow */
+        .btn-success {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 25px rgba(34, 197, 94, 0.4), 0 0 30px rgba(34, 197, 94, 0.2);
+        }
+
+        /* Secondary button */
+        .btn-secondary {
+            background: rgba(55, 65, 81, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.2s ease;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(75, 85, 99, 0.6);
+            border-color: rgba(255, 255, 255, 0.15);
+            transform: translateY(-1px);
+        }
+
+        /* Status badges */
+        .badge-pending {
+            background: rgba(234, 179, 8, 0.15);
+            border: 1px solid rgba(234, 179, 8, 0.3);
+            color: #fbbf24;
+        }
+
+        .badge-success {
+            background: rgba(34, 197, 94, 0.15);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: #4ade80;
+        }
+
+        .badge-error {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #f87171;
+        }
+
+        /* Alert boxes */
+        .alert-success {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            box-shadow: 0 0 20px rgba(34, 197, 94, 0.1);
+        }
+
+        .alert-error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.1);
+        }
+
+        .alert-warning {
+            background: rgba(234, 179, 8, 0.1);
+            border: 1px solid rgba(234, 179, 8, 0.2);
+            box-shadow: 0 0 20px rgba(234, 179, 8, 0.1);
+        }
+
+        /* Code/mono text */
+        .code-block {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+        }
+
+        /* Progress bar */
+        .progress-track {
+            background: rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%);
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+            transition: width 0.3s ease;
+        }
+
+        /* Script preview box */
+        .script-box {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            line-height: 1.8;
+        }
+
+        /* Hook highlight */
+        .hook-highlight {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(139, 92, 246, 0.1) 100%);
+            border: 1px solid rgba(59, 130, 246, 0.25);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.1);
+        }
+
+        /* HTMX loading indicator */
+        .htmx-indicator {
+            display: none;
+        }
+        .htmx-request .htmx-indicator {
+            display: inline-flex;
+        }
+        .htmx-request.htmx-indicator {
+            display: inline-flex;
+        }
+
+        /* Spinner */
+        .spinner {
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-top: 2px solid #fff;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            animation: spin 0.8s linear infinite;
+        }
+
+        .spinner-large {
+            border: 3px solid rgba(59, 130, 246, 0.2);
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Smooth scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        /* Link hover glow */
+        a.nav-link {
+            transition: all 0.2s ease;
+        }
+
+        a.nav-link:hover {
+            color: #fff;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+
+        /* Card hover lift */
+        .card-interactive {
+            transition: all 0.2s ease;
+        }
+
+        .card-interactive:hover {
+            transform: translateY(-2px);
+            box-shadow:
+                0 12px 40px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.12);
+        }
+    </style>
+</head>
+<body class="text-gray-100 min-h-screen flex flex-col">
+    <!-- Header -->
+    <header class="border-b border-white/5 bg-black/20 backdrop-blur-sm sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+            <a href="/" class="text-xl font-semibold text-white tracking-tight">
+                <span class="text-blue-400">Content</span>Engine
+            </a>
+            <nav class="flex gap-1 sm:gap-4">
+                <a href="/wizard" class="nav-link text-gray-400 hover:text-white text-sm px-2 py-1 rounded hover:bg-white/5">New</a>
+                <a href="/queue" class="nav-link text-gray-400 hover:text-white text-sm px-2 py-1 rounded hover:bg-white/5">Queue</a>
+                <a href="/reviews" class="nav-link text-gray-400 hover:text-white text-sm px-2 py-1 rounded hover:bg-white/5">Reviews</a>
+                <a href="/library" class="nav-link text-gray-400 hover:text-white text-sm px-2 py-1 rounded hover:bg-white/5">Library</a>
+                <a href="/wizard/presets" class="nav-link text-gray-400 hover:text-white text-sm px-2 py-1 rounded hover:bg-white/5">Presets</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main content -->
+    <main class="flex-1 max-w-4xl w-full mx-auto px-4 py-8">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-white/5 bg-black/10">
+        <div class="max-w-4xl mx-auto px-4 py-4 text-center text-gray-600 text-xs">
+            Content Engine v0.3.0 &middot; <span class="text-gray-700">Voice dictation uses Web Speech API</span>
+        </div>
+    </footer>
+
+    <!-- Voice Dictation Module (Web Speech API) -->
+    <script>
+    (function() {
+        'use strict';
+
+        // Check for Web Speech API support
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const speechSupported = !!SpeechRecognition;
+
+        // Debug logging (disable in production)
+        const DEBUG = true;
+        function log(...args) {
+            if (DEBUG) console.log('[VoiceDictation]', ...args);
+        }
+
+        log('Module loaded, speechSupported:', speechSupported);
+
+        // Track active recognition instance
+        let activeRecognition = null;
+        let activeButton = null;
+
+        /**
+         * Create a mic button element
+         */
+        function createMicButton() {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'mic-btn p-2 rounded-lg bg-white/5 border border-white/10 text-gray-400 hover:bg-white/10 hover:text-white hover:border-white/20 transition-all focus:ring-2 focus:ring-blue-500/30 focus:outline-none flex-shrink-0';
+            btn.setAttribute('aria-label', 'Voice input');
+            btn.title = speechSupported ? 'Click to dictate' : 'Voice input not supported in this browser';
+            btn.innerHTML = `
+                <svg class="w-4 h-4 mic-icon pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/>
+                </svg>
+                <span class="listening-indicator hidden text-xs ml-1 pointer-events-none">Listening...</span>
+            `;
+
+            if (!speechSupported) {
+                btn.disabled = true;
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+
+            return btn;
+        }
+
+        /**
+         * Start dictation for a specific input element
+         */
+        function startDictation(inputEl, micBtn) {
+            log('startDictation called, speechSupported:', speechSupported);
+
+            if (!speechSupported) {
+                alert('Voice input is not supported in this browser. Try Chrome or Edge.');
+                return;
+            }
+
+            // Stop any active recognition
+            if (activeRecognition) {
+                log('Stopping existing recognition');
+                activeRecognition.stop();
+            }
+
+            log('Creating new SpeechRecognition instance');
+            const recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = 'en-US';
+
+            activeRecognition = recognition;
+            activeButton = micBtn;
+
+            // Update button state to recording
+            micBtn.classList.remove('bg-white/5', 'text-gray-400', 'hover:bg-white/10');
+            micBtn.classList.add('bg-red-500/20', 'text-red-400', 'border-red-500/30', 'animate-pulse');
+            micBtn.querySelector('.mic-icon').classList.add('text-red-400');
+            micBtn.querySelector('.listening-indicator').classList.remove('hidden');
+            micBtn.title = 'Click to stop dictation';
+
+            let finalTranscript = '';
+
+            recognition.onresult = function(event) {
+                let interimTranscript = '';
+
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const transcript = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) {
+                        finalTranscript += transcript + ' ';
+                    } else {
+                        interimTranscript += transcript;
+                    }
+                }
+
+                // Append final transcript to input
+                if (finalTranscript) {
+                    const currentValue = inputEl.value;
+                    const needsSpace = currentValue && !currentValue.endsWith(' ') && !currentValue.endsWith('\n');
+                    inputEl.value = currentValue + (needsSpace ? ' ' : '') + finalTranscript.trim();
+                    finalTranscript = '';
+
+                    // Trigger input event for any listeners
+                    inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            };
+
+            recognition.onerror = function(event) {
+                log('Speech recognition error:', event.error);
+                if (event.error === 'not-allowed') {
+                    alert('Microphone access was denied. Please allow microphone access and try again.');
+                } else if (event.error === 'no-speech') {
+                    log('No speech detected');
+                } else if (event.error === 'audio-capture') {
+                    alert('No microphone found. Please connect a microphone and try again.');
+                } else if (event.error === 'network') {
+                    alert('Network error during speech recognition. Please check your connection.');
+                }
+                stopDictation();
+            };
+
+            recognition.onend = function() {
+                log('Speech recognition ended');
+                stopDictation();
+            };
+
+            recognition.onstart = function() {
+                log('Speech recognition started successfully');
+            };
+
+            try {
+                log('Attempting to start recognition...');
+                recognition.start();
+            } catch (e) {
+                log('Failed to start recognition:', e);
+                stopDictation();
+            }
+        }
+
+        /**
+         * Stop dictation
+         */
+        function stopDictation() {
+            if (activeRecognition) {
+                try {
+                    activeRecognition.stop();
+                } catch (e) {}
+                activeRecognition = null;
+            }
+
+            if (activeButton) {
+                activeButton.classList.remove('bg-red-500/20', 'text-red-400', 'border-red-500/30', 'animate-pulse');
+                activeButton.classList.add('bg-white/5', 'text-gray-400', 'hover:bg-white/10');
+                activeButton.querySelector('.mic-icon').classList.remove('text-red-400');
+                activeButton.querySelector('.listening-indicator').classList.add('hidden');
+                activeButton.title = 'Click to dictate';
+                activeButton = null;
+            }
+        }
+
+        /**
+         * Toggle dictation for a mic button
+         */
+        function toggleDictation(micBtn, inputEl) {
+            log('toggleDictation called, activeButton:', activeButton === micBtn ? 'same' : 'different');
+            if (activeButton === micBtn) {
+                stopDictation();
+            } else {
+                startDictation(inputEl, micBtn);
+            }
+        }
+
+        /**
+         * Attach mic buttons to all inputs with data-dictation attribute
+         */
+        function attachMicButtons() {
+            const inputs = document.querySelectorAll('[data-dictation]');
+            log('attachMicButtons called, found', inputs.length, 'inputs');
+
+            inputs.forEach((input, index) => {
+                // Skip if already has mic button
+                if (input.dataset.micAttached) {
+                    log(`  Input ${index}: already attached, skipping`);
+                    return;
+                }
+
+                log(`  Input ${index}: attaching mic button to`, input.tagName, input.id || '(no id)');
+
+                const micBtn = createMicButton();
+
+                // Position mic button based on input type
+                if (input.tagName === 'TEXTAREA') {
+                    // For textareas, add button in top-right corner
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'relative w-full';
+                    input.parentNode.insertBefore(wrapper, input);
+                    wrapper.appendChild(input);
+
+                    micBtn.className += ' absolute top-2 right-2 z-20';
+                    wrapper.appendChild(micBtn);
+                } else {
+                    // For regular inputs, add button inline to the right
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'flex gap-2 items-center w-full';
+                    input.parentNode.insertBefore(wrapper, input);
+                    wrapper.appendChild(input);
+                    input.classList.add('flex-1');
+                    wrapper.appendChild(micBtn);
+                }
+
+                // Add click handler with debugging
+                micBtn.addEventListener('click', function(e) {
+                    log('Mic button clicked for input:', input.id || input.tagName);
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleDictation(micBtn, input);
+                });
+
+                input.dataset.micAttached = 'true';
+                log(`  Input ${index}: mic button attached successfully`);
+            });
+        }
+
+        /**
+         * Initialize dictation for dynamically added elements
+         */
+        function initDictation() {
+            log('initDictation called');
+
+            // Attach to existing elements
+            attachMicButtons();
+
+            // Watch for new elements (HTMX)
+            document.body.addEventListener('htmx:afterSwap', function() {
+                log('htmx:afterSwap event');
+                attachMicButtons();
+            });
+            document.body.addEventListener('htmx:afterSettle', function() {
+                log('htmx:afterSettle event');
+                attachMicButtons();
+            });
+
+            // Stop dictation on Escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && activeRecognition) {
+                    log('Escape key pressed, stopping dictation');
+                    stopDictation();
+                }
+            });
+
+            // Watch for modals being shown/hidden
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                        const el = mutation.target;
+                        const wasHidden = el.classList.contains('hidden');
+
+                        if (wasHidden && activeRecognition) {
+                            // Modal was hidden, stop dictation
+                            log('Modal hidden, stopping dictation');
+                            stopDictation();
+                        } else if (!wasHidden) {
+                            // Modal was shown, try to attach mic buttons
+                            log('Modal shown, re-attaching mic buttons');
+                            setTimeout(attachMicButtons, 50);
+                        }
+                    }
+                });
+            });
+
+            // Observe modal elements
+            const modals = document.querySelectorAll('[id$="-modal"]');
+            log('Found', modals.length, 'modals to observe');
+            modals.forEach(modal => {
+                observer.observe(modal, { attributes: true, attributeFilter: ['class'] });
+            });
+        }
+
+        // Export functions globally
+        window.VoiceDictation = {
+            supported: speechSupported,
+            start: startDictation,
+            stop: stopDictation,
+            toggle: toggleDictation,
+            attachButtons: attachMicButtons,
+            createButton: createMicButton,
+            debug: function() {
+                const inputs = document.querySelectorAll('[data-dictation]');
+                console.log('=== VoiceDictation Debug ===');
+                console.log('Speech API supported:', speechSupported);
+                console.log('Inputs with data-dictation:', inputs.length);
+                inputs.forEach((input, i) => {
+                    console.log(`  ${i}: ${input.tagName}#${input.id || '(no id)'}, micAttached: ${input.dataset.micAttached}`);
+                });
+                const micBtns = document.querySelectorAll('.mic-btn');
+                console.log('Mic buttons in DOM:', micBtns.length);
+                console.log('Active recognition:', !!activeRecognition);
+                console.log('Active button:', !!activeButton);
+            }
+        };
+
+        // Initialize on DOMContentLoaded
+        if (document.readyState === 'loading') {
+            log('Waiting for DOMContentLoaded');
+            document.addEventListener('DOMContentLoaded', initDictation);
+        } else {
+            log('Document already loaded, initializing now');
+            initDictation();
+        }
+
+        log('Module initialization complete');
+    })();
+    </script>
+</body>
+</html>

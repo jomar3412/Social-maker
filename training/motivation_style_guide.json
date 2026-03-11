@@ -1,0 +1,200 @@
+{
+  "niche": "motivation",
+  "display_name": "Daily Motivation / Mindset",
+  "voice": {
+    "tone": "direct-personal",
+    "personality": "supportive friend who tells it like it is",
+    "reading_level": "conversational",
+    "energy": "varies by script type"
+  },
+  "script_types": {
+    "affirming": {
+      "description": "Validating the viewer's struggles and progress",
+      "voice_style": "calm, low, warm - not a whisper but firm",
+      "energy": "low-medium",
+      "example_openers": [
+        "You did good today. Really good.",
+        "Seems like you forgot again, so let me remind you.",
+        "In case no one told you today..."
+      ],
+      "themes": ["self-worth", "acknowledging pain", "you're enough", "rest is okay"]
+    },
+    "future_accountability": {
+      "description": "Making viewer think about their future self",
+      "voice_style": "measured, serious, reflective",
+      "energy": "medium",
+      "example_openers": [
+        "One year from today...",
+        "Remember this: a year isn't 365 days.",
+        "Future you is watching right now."
+      ],
+      "themes": ["future self", "decisions matter", "time passing", "no regrets"]
+    },
+    "aggressive_energy": {
+      "description": "High energy wake-up call, drill sergeant vibes",
+      "voice_style": "yelling, aggressive, ends with calm closer",
+      "energy": "very high",
+      "example_openers": [
+        "Everything doesn't need to be perfect before you start!",
+        "Top of the morning! Ain't no money in the bed!",
+        "Wake up! Today is the day!"
+      ],
+      "themes": ["no excuses", "action now", "stop waiting", "greatness"]
+    },
+    "calm_minimal": {
+      "description": "Short, peaceful, often music-only",
+      "voice_style": "slow, calm, deep OR no voice just text",
+      "energy": "very low",
+      "example_openers": [
+        "Today is a new day.",
+        "You can't control everything.",
+        "Breathe. You're exactly where you need to be."
+      ],
+      "themes": ["letting go", "peace", "simplicity", "faith"]
+    },
+    "edgy_funny": {
+      "description": "Profanity, humor, personality-driven",
+      "voice_style": "fast, intense, comedic timing",
+      "energy": "high",
+      "example_openers": [
+        "Good morning, you gorgeous ray of fucking sunshine.",
+        "Oh, did you need motivation today? Because I got you.",
+        "Listen up, because I'm only saying this once."
+      ],
+      "themes": ["humor", "real talk", "calling out excuses", "hype"]
+    }
+  },
+  "hooks": {
+    "templates": [
+      "You did good today. Really good.",
+      "One year from today, you're either going to thank yourself or kick yourself.",
+      "Seems like you forgot again, so let me remind you.",
+      "In case your brain's still buffering, let me remind you...",
+      "Remember this...",
+      "Today is a new day. Make the most of it.",
+      "Good morning. This is your reminder.",
+      "Let me tell you something nobody else will."
+    ],
+    "types": {
+      "validation": "Acknowledge their unseen struggles",
+      "future_self": "Connect today's choices to future outcomes",
+      "direct_address": "Speak TO them, not AT them",
+      "wake_up_call": "Urgent energy, demand action"
+    },
+    "avoid": [
+      "historical figures as hooks",
+      "slavery or trauma as attention-grabbers",
+      "quotes from famous people as openers",
+      "lecturing or preaching tone",
+      "generic 'rise and grind' cliches",
+      "anything that sounds like a LinkedIn post"
+    ]
+  },
+  "vocabulary": {
+    "power_words": [
+      "you", "today", "tomorrow", "decision", "enough",
+      "proud", "survived", "stronger", "capable", "worthy",
+      "forward", "progress", "matter", "real", "truth"
+    ],
+    "forbidden": [
+      "grindset", "hustle culture", "sigma", "alpha",
+      "manifest", "universe", "vibrations", "energy" ,
+      "boss babe", "entrepreneur mindset", "10x"
+    ],
+    "emphasis_phrases": [
+      "You've got this.",
+      "That's enough.",
+      "You're still here.",
+      "And that matters.",
+      "Period."
+    ]
+  },
+  "structure": {
+    "max_sentence_words": 15,
+    "target_duration": 45,
+    "min_duration": 20,
+    "max_duration": 90,
+    "sections": {
+      "hook": {
+        "duration": 3,
+        "word_count": 10,
+        "purpose": "Direct emotional connection"
+      },
+      "body": {
+        "duration": 30,
+        "word_count": 80,
+        "purpose": "Build the message with personal truth"
+      },
+      "landing": {
+        "duration": 10,
+        "word_count": 20,
+        "purpose": "Strong closing affirmation or call"
+      }
+    }
+  },
+  "content_rules": {
+    "must_feel_personal": true,
+    "use_second_person": true,
+    "acknowledge_struggle": true,
+    "no_toxic_positivity": true,
+    "no_historical_figures_as_hooks": true,
+    "no_sensitive_trauma_topics": true,
+    "topics_to_avoid": [
+      "slavery", "holocaust", "abuse", "suicide",
+      "specific tragedies", "political figures"
+    ],
+    "allowed_themes": [
+      "self-worth", "progress", "future self", "rest",
+      "decisions", "action", "resilience", "growth",
+      "morning energy", "daily reminder", "you're enough"
+    ]
+  },
+  "visual_style": {
+    "text_on_screen": {
+      "key_phrases": true,
+      "emotional_words": true,
+      "minimal_not_cluttered": true
+    },
+    "footage_types": [
+      "cinematic nature", "sunrise/sunset", "person walking alone",
+      "city time-lapse", "ocean waves", "mountains",
+      "rain on window", "coffee brewing", "morning routines"
+    ],
+    "avoid_footage": [
+      "stock business people", "pointing at camera",
+      "cheesy thumbs up", "overly polished influencer shots"
+    ]
+  },
+  "audio_style": {
+    "music_by_type": {
+      "affirming": "slow piano, ambient, emotional",
+      "future_accountability": "building cinematic, subtle tension",
+      "aggressive_energy": "hard trap beats, bass drops",
+      "calm_minimal": "soft piano only, minimal",
+      "edgy_funny": "upbeat, playful, or ironic contrast"
+    },
+    "voice_directions": {
+      "affirming": "low tone, firm but calm, warm",
+      "future_accountability": "measured, serious, reflective pauses",
+      "aggressive_energy": "yelling, fast, end calm",
+      "calm_minimal": "very slow, deep, or NO voice",
+      "edgy_funny": "fast, intense, comedic timing"
+    }
+  },
+  "hashtags": {
+    "primary": ["#motivation", "#mindset", "#dailyreminder", "#selflove"],
+    "secondary": ["#growthmindset", "#youvegotthis", "#mentalhealthmatters", "#positivity"],
+    "type_specific": {
+      "affirming": ["#selfcare", "#healing", "#youreenough"],
+      "aggressive_energy": ["#wakeup", "#noexcuses", "#discipline"],
+      "calm_minimal": ["#peace", "#breathe", "#innerpeace"]
+    }
+  },
+  "cta_templates": [
+    "You needed to hear this today.",
+    "Save this for when you need it.",
+    "Tag someone who needs this.",
+    "Follow for daily reminders.",
+    "Comment if this hit different."
+  ]
+}

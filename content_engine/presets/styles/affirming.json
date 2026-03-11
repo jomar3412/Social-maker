@@ -1,0 +1,51 @@
+{
+  "name": "affirming",
+  "display_name": "Affirming & Validating",
+  "description": "Validating the viewer's struggles and progress with warmth",
+  "tags": ["calm", "supportive", "healing", "self-care"],
+  "voice_style": "calm, low, warm - not a whisper but firm",
+  "energy": "low-medium",
+  "example_openers": [
+    "You did good today. Really good.",
+    "Seems like you forgot again, so let me remind you.",
+    "In case no one told you today..."
+  ],
+  "themes": ["self-worth", "acknowledging pain", "you're enough", "rest is okay"],
+  "beat_config": {
+    "HOOK": {
+      "min_duration": 2.0,
+      "max_duration": 4.0,
+      "mood_keywords": ["validation", "comfort", "acknowledgment"]
+    },
+    "TENSION": {
+      "min_duration": 4.0,
+      "max_duration": 8.0,
+      "mood_keywords": ["struggle", "difficulty", "weight", "burden"]
+    },
+    "SHIFT": {
+      "min_duration": 2.0,
+      "max_duration": 4.0,
+      "mood_keywords": ["but", "however", "truth", "actually"]
+    },
+    "CLIMB": {
+      "min_duration": 6.0,
+      "max_duration": 12.0,
+      "mood_keywords": ["progress", "strength", "growth", "forward"]
+    },
+    "RESOLUTION": {
+      "min_duration": 3.0,
+      "max_duration": 6.0,
+      "mood_keywords": ["peace", "acceptance", "enough", "worthy"]
+    },
+    "CTA": {
+      "min_duration": 2.0,
+      "max_duration": 4.0,
+      "mood_keywords": ["remember", "save", "share", "follow"]
+    }
+  },
+  "audio": {
+    "music": "slow piano, ambient, emotional",
+    "voice_direction": "low tone, firm but calm, warm"
+  },
+  "hashtags": ["#selfcare", "#healing", "#youreenough"]
+}

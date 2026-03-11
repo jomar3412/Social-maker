@@ -1,0 +1,51 @@
+{
+  "name": "aggressive_energy",
+  "display_name": "Aggressive Energy",
+  "description": "High energy wake-up call, drill sergeant vibes",
+  "tags": ["intense", "motivational", "wake-up", "action"],
+  "voice_style": "yelling, aggressive, ends with calm closer",
+  "energy": "very high",
+  "example_openers": [
+    "Everything doesn't need to be perfect before you start!",
+    "Top of the morning! Ain't no money in the bed!",
+    "Wake up! Today is the day!"
+  ],
+  "themes": ["no excuses", "action now", "stop waiting", "greatness"],
+  "beat_config": {
+    "HOOK": {
+      "min_duration": 1.5,
+      "max_duration": 3.0,
+      "mood_keywords": ["wake", "now", "attention", "urgent"]
+    },
+    "TENSION": {
+      "min_duration": 3.0,
+      "max_duration": 6.0,
+      "mood_keywords": ["excuses", "waiting", "wasting", "stuck"]
+    },
+    "SHIFT": {
+      "min_duration": 2.0,
+      "max_duration": 4.0,
+      "mood_keywords": ["but", "enough", "stop", "change"]
+    },
+    "CLIMB": {
+      "min_duration": 5.0,
+      "max_duration": 10.0,
+      "mood_keywords": ["grind", "push", "fight", "win", "dominate"]
+    },
+    "RESOLUTION": {
+      "min_duration": 3.0,
+      "max_duration": 5.0,
+      "mood_keywords": ["calm", "earned", "victory", "greatness"]
+    },
+    "CTA": {
+      "min_duration": 2.0,
+      "max_duration": 3.0,
+      "mood_keywords": ["go", "start", "now", "action"]
+    }
+  },
+  "audio": {
+    "music": "hard trap beats, bass drops",
+    "voice_direction": "yelling, fast, end calm"
+  },
+  "hashtags": ["#wakeup", "#noexcuses", "#discipline"]
+}

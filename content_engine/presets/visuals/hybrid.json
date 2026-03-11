@@ -1,0 +1,40 @@
+{
+  "name": "hybrid",
+  "display_name": "Hybrid (Stock + AI)",
+  "description": "Use stock footage with AI-generated fills for gaps, ultra-detailed prompts for AI scenes",
+  "tags": ["hybrid", "stock", "ai", "flexible"],
+  "mode": "hybrid",
+  "strategy": {
+    "primary": "stock",
+    "fallback": "nanobanana",
+    "ai_threshold": "when stock match score < 0.6"
+  },
+  "stock_config": {
+    "sources": ["envato", "pexels"],
+    "prefer_vertical": true,
+    "min_resolution": "1080p"
+  },
+  "ai_config": {
+    "model": "veo-2.0",
+    "resolution": "1080x1920",
+    "aspect_ratio": "9:16",
+    "fps": 24,
+    "style": "match_stock_aesthetic"
+  },
+  "prompt_settings": {
+    "detail_level": "ultra",
+    "min_words": 90,
+    "max_words": 180,
+    "include_camera_specs": true,
+    "include_subject_details": true,
+    "include_environment": true,
+    "include_lighting": true,
+    "include_color_style": true,
+    "include_continuity": true,
+    "include_negatives": true
+  },
+  "blend_rules": {
+    "prefer_stock_for": ["people", "faces", "real locations"],
+    "prefer_ai_for": ["abstract", "impossible shots", "custom scenes"]
+  }
+}

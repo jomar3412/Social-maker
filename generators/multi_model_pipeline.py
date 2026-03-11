@@ -175,7 +175,7 @@ Respond in JSON:
 
         try:
             response = self.gemini.models.generate_content(
-                model="gemini-2.0-flash",
+                model="gemini-2.5-flash",
                 contents=gemini_prompt,
             )
             text = response.text
@@ -258,13 +258,13 @@ Respond in JSON:
         topic: str,
         research_context: str,
         content_type: str = "fact",
-        target_duration: float = 45.0,
+        target_duration: float = 65.0,  # Just over 1 minute for longer engagement
         niche: str = "fun_facts",
     ) -> dict:
         """
         Use ChatGPT to write the initial script draft.
         """
-        words_target = int(target_duration * 2.5)
+        words_target = int(target_duration * 2.5)  # ~162 words for 65s
 
         # Load style guide additions
         style_config = self._load_style_guide(niche)
@@ -418,7 +418,7 @@ Respond in JSON:
 
         try:
             response = self.gemini.models.generate_content(
-                model="gemini-2.0-flash",
+                model="gemini-2.5-flash",
                 contents=prompt,
             )
             text = response.text
@@ -471,7 +471,7 @@ YOUR JOB:
 4. Remove ANY filler words
 5. Keep sentences short and punchy (5-10 words max)
 6. Add visual cues for editing
-7. Ensure total duration ~45 seconds (~110 words)
+7. Ensure total duration ~65 seconds (~160 words)
 
 Content type: {content_type}
 
@@ -492,8 +492,8 @@ Respond in JSON:
     "caption": "Social media caption",
     "hashtags": ["#tag1", "#tag2", ...],
     "voiceover": "Complete script as one text block for TTS",
-    "estimated_duration": 45,
-    "word_count": 110,
+    "estimated_duration": 65,
+    "word_count": 160,
     "changes_made": ["List of significant changes from draft"]
 }}"""
 

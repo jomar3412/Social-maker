@@ -1,0 +1,23 @@
+{
+  "name": "energetic",
+  "display_name": "Energetic & Intense",
+  "description": "High-energy voice for aggressive, hype content",
+  "tags": ["intense", "fast", "energetic", "hype"],
+  "elevenlabs": {
+    "voice_id": "VR6AewLTigWG4xSOukaG",
+    "model_id": "eleven_monolingual_v1",
+    "stability": 0.3,
+    "similarity_boost": 0.8,
+    "style": 0.6,
+    "use_speaker_boost": true
+  },
+  "characteristics": {
+    "gender": "male",
+    "age": "young adult",
+    "tone": "intense, commanding",
+    "pace": "fast, punchy",
+    "emphasis": "exclamations, call-to-action"
+  },
+  "best_for": ["aggressive_energy", "edgy_funny"],
+  "avoid_for": ["calm_minimal"]
+}

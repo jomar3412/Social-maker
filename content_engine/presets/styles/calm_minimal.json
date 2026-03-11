@@ -1,0 +1,51 @@
+{
+  "name": "calm_minimal",
+  "display_name": "Calm & Minimal",
+  "description": "Short, peaceful, often music-only",
+  "tags": ["peaceful", "minimal", "zen", "ambient"],
+  "voice_style": "slow, calm, deep OR no voice just text",
+  "energy": "very low",
+  "example_openers": [
+    "Today is a new day.",
+    "You can't control everything.",
+    "Breathe. You're exactly where you need to be."
+  ],
+  "themes": ["letting go", "peace", "simplicity", "faith"],
+  "beat_config": {
+    "HOOK": {
+      "min_duration": 3.0,
+      "max_duration": 5.0,
+      "mood_keywords": ["breathe", "calm", "peace", "stillness"]
+    },
+    "TENSION": {
+      "min_duration": 5.0,
+      "max_duration": 10.0,
+      "mood_keywords": ["chaos", "noise", "struggle", "weight"]
+    },
+    "SHIFT": {
+      "min_duration": 3.0,
+      "max_duration": 5.0,
+      "mood_keywords": ["release", "let go", "accept"]
+    },
+    "CLIMB": {
+      "min_duration": 8.0,
+      "max_duration": 15.0,
+      "mood_keywords": ["peace", "quiet", "stillness", "gentle"]
+    },
+    "RESOLUTION": {
+      "min_duration": 4.0,
+      "max_duration": 8.0,
+      "mood_keywords": ["serenity", "acceptance", "faith", "trust"]
+    },
+    "CTA": {
+      "min_duration": 3.0,
+      "max_duration": 5.0,
+      "mood_keywords": ["breathe", "remember", "save"]
+    }
+  },
+  "audio": {
+    "music": "soft piano only, minimal",
+    "voice_direction": "very slow, deep, or NO voice"
+  },
+  "hashtags": ["#peace", "#breathe", "#innerpeace"]
+}

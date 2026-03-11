@@ -1,0 +1,256 @@
+{
+  "niche": "brand",
+  "display_name": "Brand Content / UGC Ads",
+  "voice": {
+    "tone": "authentic-conversational",
+    "personality": "trusted friend recommending product",
+    "reading_level": "conversational",
+    "energy": "enthusiastic but genuine"
+  },
+  "script_types": {
+    "product_review": {
+      "description": "Honest product review style",
+      "structure": "Problem -> Discovery -> Demo -> Result",
+      "voice_style": "genuine, personal experience",
+      "energy": "medium, authentic enthusiasm",
+      "sections": ["hook", "problem", "discovery", "demonstration", "result", "cta"],
+      "example_openers": [
+        "Okay so I finally tried {product} and...",
+        "Be honest, has anyone else struggled with {problem}?",
+        "I was skeptical but after 2 weeks..."
+      ]
+    },
+    "unboxing": {
+      "description": "First impressions and reactions",
+      "structure": "Anticipation -> Reveal -> Details -> Verdict",
+      "voice_style": "excited, genuine curiosity",
+      "energy": "high, playful",
+      "sections": ["hook", "anticipation", "reveal", "details", "verdict", "cta"],
+      "example_openers": [
+        "My {product} finally arrived!",
+        "Let's see if it's worth the hype...",
+        "Unboxing my new {product} with you"
+      ]
+    },
+    "lifestyle_integration": {
+      "description": "Product naturally in daily routine",
+      "structure": "Day in Life -> Problem Moment -> Product Use -> Benefit",
+      "voice_style": "casual, everyday",
+      "energy": "relaxed, natural",
+      "sections": ["hook", "day_intro", "problem_moment", "product_use", "benefit", "cta"],
+      "example_openers": [
+        "POV: your morning routine just got upgraded",
+        "How I start every single day now",
+        "This has become my new non-negotiable"
+      ]
+    },
+    "problem_solution": {
+      "description": "Classic problem-solution format",
+      "structure": "Pain Point -> Failed Attempts -> Solution -> Transformation",
+      "voice_style": "relatable, empathetic",
+      "energy": "builds from low to high",
+      "sections": ["hook", "pain_point", "failed_attempts", "solution", "transformation", "cta"],
+      "example_openers": [
+        "I spent years trying to fix {problem}",
+        "Nothing worked until I found this",
+        "Why did nobody tell me about this sooner?"
+      ]
+    },
+    "tutorial": {
+      "description": "How-to demonstration",
+      "structure": "Goal -> Steps -> Tips -> Result",
+      "voice_style": "helpful, instructive",
+      "energy": "focused, confident",
+      "sections": ["hook", "goal", "step1", "step2", "step3", "tips", "result", "cta"],
+      "example_openers": [
+        "How I get {result} every time",
+        "The trick nobody talks about",
+        "Let me show you the right way to..."
+      ]
+    },
+    "testimonial": {
+      "description": "Personal experience story",
+      "structure": "Before -> Journey -> After -> Recommendation",
+      "voice_style": "heartfelt, personal",
+      "energy": "emotional, genuine",
+      "sections": ["hook", "before", "journey", "after", "recommendation", "cta"],
+      "example_openers": [
+        "My {time period} journey with {product}",
+        "What actually changed for me",
+        "I never thought I'd be saying this but..."
+      ]
+    }
+  },
+  "visual_style": {
+    "aesthetic": "photorealistic",
+    "lighting": "natural",
+    "camera_style": "iPhone-quality UGC",
+    "format": "vertical 9:16",
+    "requirements": [
+      "Authentic UGC look (not overly polished)",
+      "Natural skin texture with subtle imperfections",
+      "Real environments, not studio perfect",
+      "Product clearly visible and in focus",
+      "Natural hand movements and gestures"
+    ]
+  },
+  "hooks": {
+    "templates": [
+      "I've been using {product} for {time} and...",
+      "POV: You finally find a {category} that actually works",
+      "Things I wish I knew before buying {product}",
+      "Why everyone is switching to {brand}",
+      "Stop scrolling if you have {problem}",
+      "This is your sign to try {product}",
+      "Nobody talks about this {category} secret",
+      "I was today years old when I learned..."
+    ],
+    "types": {
+      "pov": "Put viewer in the scenario",
+      "confession": "Personal admission or realization",
+      "challenge": "Challenge common beliefs",
+      "social_proof": "Reference what others are doing",
+      "curiosity": "Create information gap"
+    },
+    "avoid": [
+      "Clickbait that doesn't deliver",
+      "Overly salesy language",
+      "Corporate/scripted feel",
+      "Obvious paid promotion vibes",
+      "Starting with brand name"
+    ]
+  },
+  "vocabulary": {
+    "power_words": [
+      "finally", "actually", "obsessed", "game-changer", "holy grail",
+      "secret", "underrated", "tried", "tested", "honest",
+      "real", "genuine", "literally", "transformed", "changed"
+    ],
+    "authentic_phrases": [
+      "not sponsored btw", "I paid for this myself",
+      "I genuinely love this", "no but seriously",
+      "okay hear me out", "not gonna lie",
+      "lowkey obsessed", "it just works"
+    ],
+    "forbidden": [
+      "buy now", "limited time", "act fast", "don't miss",
+      "absolutely amazing", "best ever", "perfect in every way",
+      "use code", "discount", "sale"
+    ],
+    "cta_phrases": [
+      "link in bio", "comment for the link", "save this for later",
+      "follow for more", "dm me", "shop the link"
+    ]
+  },
+  "structure": {
+    "max_sentence_words": 15,
+    "target_duration": 30,
+    "min_duration": 15,
+    "max_duration": 60,
+    "sections": {
+      "hook": {
+        "duration": 3,
+        "word_count": 10,
+        "purpose": "Stop the scroll with relatable moment"
+      },
+      "problem": {
+        "duration": 5,
+        "word_count": 15,
+        "purpose": "Establish relatable problem"
+      },
+      "solution": {
+        "duration": 10,
+        "word_count": 30,
+        "purpose": "Introduce product naturally"
+      },
+      "demonstration": {
+        "duration": 8,
+        "word_count": 25,
+        "purpose": "Show product in use"
+      },
+      "result": {
+        "duration": 5,
+        "word_count": 15,
+        "purpose": "Show outcome/transformation"
+      },
+      "cta": {
+        "duration": 4,
+        "word_count": 12,
+        "purpose": "Clear but soft call to action"
+      }
+    }
+  },
+  "content_rules": {
+    "authenticity": true,
+    "show_real_use": true,
+    "avoid_hard_sell": true,
+    "include_personal_experience": true,
+    "topics_to_avoid": [
+      "Unrealistic claims",
+      "Medical advice without disclaimer",
+      "Competitor bashing",
+      "Fake scarcity",
+      "Pressure tactics"
+    ],
+    "required_elements": [
+      "Product clearly shown",
+      "Genuine reaction/emotion",
+      "Specific benefit mentioned",
+      "Natural environment",
+      "Soft CTA"
+    ]
+  },
+  "audio_style": {
+    "music": "trending sounds, chill lo-fi, or popular TikTok audio",
+    "sound_effects": {
+      "ding": "reveal or key point",
+      "swoosh": "transition",
+      "pop": "text emphasis"
+    },
+    "voice": {
+      "pace": "conversational, 140 WPM",
+      "emphasis": "genuine enthusiasm on key benefits",
+      "tone": "like talking to a friend"
+    }
+  },
+  "hashtags": {
+    "primary": ["#ad", "#sponsored", "#gifted", "#ugc"],
+    "secondary": ["#review", "#honest", "#routine", "#favorites"],
+    "category_specific": {
+      "skincare": ["#skincare", "#skincareroutine", "#glowingskin", "#skincaretips"],
+      "beauty": ["#beautytips", "#makeup", "#beautyreview", "#beautyhacks"],
+      "fitness": ["#fitness", "#workout", "#fitnessmotivation", "#gym"],
+      "tech": ["#tech", "#gadgets", "#techreview", "#unboxing"],
+      "fashion": ["#fashion", "#style", "#ootd", "#fashionreview"],
+      "food": ["#food", "#recipe", "#foodie", "#foodreview"]
+    }
+  },
+  "cta_templates": [
+    "Link in bio if you want to try it.",
+    "Comment {keyword} and I'll send you the link.",
+    "Save this for your next {shopping occasion}.",
+    "Follow for more honest reviews.",
+    "DM me for the discount code.",
+    "Tell me in the comments - have you tried this?"
+  ],
+  "platform_adjustments": {
+    "tiktok": {
+      "max_duration": 60,
+      "trending_sounds": true,
+      "fast_paced_edits": true,
+      "text_on_screen": "minimal, bold"
+    },
+    "instagram_reels": {
+      "max_duration": 90,
+      "polished_aesthetic": true,
+      "branded_feel": "slightly more",
+      "text_on_screen": "clean, styled"
+    },
+    "youtube_shorts": {
+      "max_duration": 60,
+      "more_informative": true,
+      "subscribe_cta": true,
+      "text_on_screen": "clear, readable"
+    }
+  }
+}

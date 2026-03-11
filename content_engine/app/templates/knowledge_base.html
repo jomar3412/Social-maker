@@ -1,0 +1,337 @@
+{% extends "base.html" %}
+
+{% block title %}Content Engine - Knowledge Base{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-2xl font-semibold tracking-tight">Knowledge Base</h1>
+            <p class="text-gray-500 text-sm mt-1">External specs, internal learning, and conflict resolution</p>
+        </div>
+        <a href="/wizard" class="text-blue-400 hover:text-blue-300 text-sm">
+            &larr; Back to Wizard
+        </a>
+    </div>
+
+    {% if error %}
+    <div class="alert-error rounded-xl p-4 mb-6">
+        <div class="flex items-start gap-3">
+            <svg class="w-5 h-5 text-red-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <div class="text-sm text-red-200">
+                <p class="font-medium">Knowledge base not available</p>
+                <p class="text-red-300/80 mt-1">{{ error }}</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Stats Overview -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="glass-card rounded-xl p-4 text-center">
+            <div class="text-2xl font-bold text-blue-400">{{ external_docs|length }}</div>
+            <div class="text-xs text-gray-500 uppercase tracking-wider mt-1">External Docs</div>
+        </div>
+        <div class="glass-card rounded-xl p-4 text-center">
+            <div class="text-2xl font-bold text-green-400">{{ learning_summary.total_runs_analyzed or 0 }}</div>
+            <div class="text-xs text-gray-500 uppercase tracking-wider mt-1">Runs Analyzed</div>
+        </div>
+        <div class="glass-card rounded-xl p-4 text-center">
+            <div class="text-2xl font-bold text-yellow-400">{{ comparison.conflicts|length }}</div>
+            <div class="text-xs text-gray-500 uppercase tracking-wider mt-1">Conflicts</div>
+        </div>
+        <div class="glass-card rounded-xl p-4 text-center">
+            <div class="text-2xl font-bold text-purple-400">{{ config.sample_size_threshold or 10 }}</div>
+            <div class="text-xs text-gray-500 uppercase tracking-wider mt-1">Sample Threshold</div>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="glass-card rounded-2xl overflow-hidden">
+        <div class="flex border-b border-white/10">
+            <button class="tab-btn active px-6 py-3 text-sm font-medium" data-tab="external">
+                External Specs
+            </button>
+            <button class="tab-btn px-6 py-3 text-sm font-medium" data-tab="learning">
+                Internal Learning
+            </button>
+            <button class="tab-btn px-6 py-3 text-sm font-medium" data-tab="conflicts">
+                Conflicts
+                {% if comparison.conflicts|length > 0 %}
+                <span class="ml-1 px-1.5 py-0.5 rounded-full text-xs bg-yellow-500/20 text-yellow-400">{{ comparison.conflicts|length }}</span>
+                {% endif %}
+            </button>
+        </div>
+
+        <!-- External Specs Tab -->
+        <div id="tab-external" class="tab-content p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-medium text-gray-200">External Documents</h2>
+                <span class="text-xs text-gray-500">Authoritative specs provided by user</span>
+            </div>
+
+            {% if external_docs %}
+            <div class="space-y-3">
+                {% for doc in external_docs %}
+                <div class="glass-card rounded-xl p-4 border border-white/5 hover:border-white/10 transition-colors">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-gray-200 font-medium">{{ doc.title }}</span>
+                                {% if doc.priority == 'authoritative' %}
+                                <span class="px-2 py-0.5 rounded-full text-xs bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                                    Authoritative
+                                </span>
+                                {% endif %}
+                            </div>
+                            <p class="text-gray-500 text-sm mt-1">{{ doc.description }}</p>
+                            <div class="flex flex-wrap gap-1 mt-2">
+                                {% for tag in doc.tags %}
+                                <span class="px-2 py-0.5 rounded text-xs bg-white/5 text-gray-400">{{ tag }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="text-xs text-gray-600">
+                            <span class="uppercase">{{ doc.type }}</span>
+                            <div class="mt-1">{{ doc.added_at }}</div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-8 text-gray-500">
+                <p>No external documents loaded.</p>
+                <p class="text-sm mt-1">Add specs to <code class="text-gray-400">knowledge_base/external/specs/</code></p>
+            </div>
+            {% endif %}
+
+            <div class="mt-6 p-4 bg-blue-500/10 rounded-xl border border-blue-500/20">
+                <h3 class="text-sm font-medium text-blue-300 mb-2">Adding New Documents</h3>
+                <ol class="text-xs text-blue-200/80 space-y-1 list-decimal list-inside">
+                    <li>Place the file in <code>knowledge_base/external/specs/</code> (or transcripts/research)</li>
+                    <li>Add entry to <code>knowledge_base/manifest.json</code></li>
+                    <li>Update <code>knowledge_base/index.md</code></li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- Internal Learning Tab -->
+        <div id="tab-learning" class="tab-content p-6 hidden">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-medium text-gray-200">Internal Learning</h2>
+                <span class="text-xs text-gray-500">Auto-generated from run feedback</span>
+            </div>
+
+            {% if learning_summary and learning_summary.total_runs_analyzed %}
+            <div class="space-y-6">
+                <!-- Niche Performance -->
+                <div>
+                    <h3 class="text-sm font-medium text-gray-400 uppercase tracking-wider mb-3">Performance by Niche</h3>
+                    {% if learning_summary.niches %}
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {% for niche, data in learning_summary.niches.items() %}
+                        <div class="glass-card rounded-lg p-3">
+                            <div class="text-gray-200 font-medium">{{ niche }}</div>
+                            <div class="text-xs text-gray-500 mt-1">{{ data.run_count }} runs</div>
+                            {% if data.total_views %}
+                            <div class="text-xs text-green-400 mt-1">{{ data.total_views|int }} total views</div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-gray-500 text-sm">No niche data yet.</p>
+                    {% endif %}
+                </div>
+
+                <!-- Style Performance -->
+                <div>
+                    <h3 class="text-sm font-medium text-gray-400 uppercase tracking-wider mb-3">Performance by Style</h3>
+                    {% if learning_summary.styles %}
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {% for style, data in learning_summary.styles.items() %}
+                        <div class="glass-card rounded-lg p-3">
+                            <div class="text-gray-200 font-medium">{{ style }}</div>
+                            <div class="text-xs text-gray-500 mt-1">{{ data.run_count }} runs</div>
+                            {% if data.avg_rating %}
+                            <div class="text-xs text-yellow-400 mt-1">{{ "%.1f"|format(data.avg_rating) }}/5 avg rating</div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-gray-500 text-sm">No style data yet.</p>
+                    {% endif %}
+                </div>
+
+                <!-- Key Insights -->
+                <div>
+                    <h3 class="text-sm font-medium text-gray-400 uppercase tracking-wider mb-3">Key Insights</h3>
+                    {% if learning_summary.insights %}
+                    <ul class="space-y-2">
+                        {% for insight in learning_summary.insights %}
+                        <li class="flex items-start gap-2">
+                            <svg class="w-4 h-4 text-green-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span class="text-gray-300 text-sm">{{ insight }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="text-gray-500 text-sm">No key insights discovered yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% else %}
+            <div class="text-center py-8 text-gray-500">
+                <svg class="w-12 h-12 mx-auto mb-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                </svg>
+                <p>No learning data yet.</p>
+                <p class="text-sm mt-1">Generate content and provide feedback to build internal knowledge.</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Conflicts Tab -->
+        <div id="tab-conflicts" class="tab-content p-6 hidden">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-medium text-gray-200">Conflicts & Resolutions</h2>
+                <button hx-post="/api/knowledge/compare"
+                        hx-swap="none"
+                        hx-on::after-request="location.reload()"
+                        class="text-xs text-blue-400 hover:text-blue-300">
+                    Refresh Comparison
+                </button>
+            </div>
+
+            <!-- Summary -->
+            <div class="grid grid-cols-3 gap-3 mb-6">
+                <div class="glass-card rounded-lg p-3 text-center border border-green-500/20">
+                    <div class="text-xl font-bold text-green-400">{{ comparison.agreements|length }}</div>
+                    <div class="text-xs text-gray-500">Agreements</div>
+                </div>
+                <div class="glass-card rounded-lg p-3 text-center border border-yellow-500/20">
+                    <div class="text-xl font-bold text-yellow-400">{{ comparison.conflicts|length }}</div>
+                    <div class="text-xs text-gray-500">Conflicts</div>
+                </div>
+                <div class="glass-card rounded-lg p-3 text-center border border-gray-500/20">
+                    <div class="text-xl font-bold text-gray-400">{{ comparison.pending|length }}</div>
+                    <div class="text-xs text-gray-500">Pending</div>
+                </div>
+            </div>
+
+            {% if comparison.conflicts %}
+            <div class="space-y-4">
+                <h3 class="text-sm font-medium text-yellow-400 uppercase tracking-wider">Active Conflicts</h3>
+                {% for conflict in comparison.conflicts %}
+                <div class="glass-card rounded-xl p-4 border border-yellow-500/20">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <div class="text-gray-200 font-medium">{{ conflict.topic }}</div>
+                            <div class="mt-2 grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <div class="text-xs text-gray-500 uppercase mb-1">External Spec</div>
+                                    <div class="text-gray-300">{{ conflict.external_value }}</div>
+                                </div>
+                                <div>
+                                    <div class="text-xs text-gray-500 uppercase mb-1">Internal Learning</div>
+                                    <div class="text-gray-300">{{ conflict.internal_value }}</div>
+                                </div>
+                            </div>
+                            <div class="mt-2 text-xs text-gray-500">
+                                Sample size: {{ conflict.sample_size }} runs |
+                                Confidence: {{ conflict.confidence }}
+                            </div>
+                        </div>
+                        <div class="ml-4">
+                            <span class="px-2 py-1 rounded text-xs
+                                {% if conflict.resolution == 'internal_preferred' %}
+                                bg-blue-500/20 text-blue-400
+                                {% elif conflict.resolution == 'external_preferred' %}
+                                bg-gray-500/20 text-gray-400
+                                {% else %}
+                                bg-yellow-500/20 text-yellow-400
+                                {% endif %}">
+                                {{ conflict.resolution|replace('_', ' ')|title }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% if comparison.agreements %}
+            <div class="space-y-4 mt-6">
+                <h3 class="text-sm font-medium text-green-400 uppercase tracking-wider">Confirmed Agreements</h3>
+                {% for agreement in comparison.agreements %}
+                <div class="glass-card rounded-lg p-3 border border-green-500/10">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        <span class="text-gray-300 text-sm">{{ agreement.topic }}: {{ agreement.internal_finding }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% if not comparison.conflicts and not comparison.agreements %}
+            <div class="text-center py-8 text-gray-500">
+                <p>No comparisons available yet.</p>
+                <p class="text-sm mt-1">Generate content and provide feedback to detect conflicts.</p>
+            </div>
+            {% endif %}
+
+            <div class="mt-6 p-4 bg-gray-500/10 rounded-xl border border-gray-500/20">
+                <h3 class="text-sm font-medium text-gray-300 mb-2">Resolution Policy</h3>
+                <ul class="text-xs text-gray-400 space-y-1 list-disc list-inside">
+                    <li>External specs are never modified automatically</li>
+                    <li>Internal data takes precedence when sample size >= {{ config.sample_size_threshold or 10 }} runs</li>
+                    <li>Critical rules (dopamine timing, hooks) always favor external spec</li>
+                    <li>Manual overrides can be set in <code>rule_overrides.json</code></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Tab switching
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const tab = this.dataset.tab;
+
+            // Update button states
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+
+            // Show/hide content
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+            document.getElementById('tab-' + tab).classList.remove('hidden');
+        });
+    });
+</script>
+
+<style>
+    .tab-btn {
+        color: #9ca3af;
+        border-bottom: 2px solid transparent;
+        transition: all 0.2s;
+    }
+    .tab-btn:hover {
+        color: #e5e7eb;
+    }
+    .tab-btn.active {
+        color: #60a5fa;
+        border-bottom-color: #60a5fa;
+    }
+</style>
+{% endblock %}

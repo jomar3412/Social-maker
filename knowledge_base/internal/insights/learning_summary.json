@@ -1,0 +1,22 @@
+{
+  "version": "1.0.0",
+  "last_updated": null,
+  "total_runs_analyzed": 0,
+  "niches": {},
+  "styles": {},
+  "visual_modes": {},
+  "hook_performance": {
+    "avg_word_count": null,
+    "best_performing_patterns": [],
+    "worst_performing_patterns": []
+  },
+  "dopamine_compliance": {
+    "level_1_pass_rate": null,
+    "level_2_pass_rate": null,
+    "level_3_pass_rate": null,
+    "level_4_pass_rate": null,
+    "level_5_pass_rate": null,
+    "level_6_pass_rate": null
+  },
+  "insights": []
+}

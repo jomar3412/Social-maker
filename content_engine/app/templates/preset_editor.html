@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+
+{% block title %}Content Engine - Edit {{ preset_name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-2xl font-semibold tracking-tight">Edit Preset</h1>
+            <p class="text-gray-500 text-sm mt-1">
+                <span class="text-gray-400">{{ category }}</span>
+                <span class="text-gray-600 mx-1">/</span>
+                <span class="font-mono">{{ preset_name }}.json</span>
+            </p>
+        </div>
+        <a href="/wizard/presets" class="text-blue-400 hover:text-blue-300 text-sm">
+            &larr; Back to Presets
+        </a>
+    </div>
+
+    <!-- Editor -->
+    <div class="glass-card rounded-2xl p-6 mb-6">
+        <div class="flex items-center justify-between mb-4">
+            <label class="text-xs font-medium text-gray-500 uppercase tracking-wider">JSON Content</label>
+            <div class="flex items-center gap-2">
+                <span id="validation-status" class="text-xs text-gray-500"></span>
+                <button onclick="formatJson()"
+                        class="text-xs text-blue-400 hover:text-blue-300">
+                    Format
+                </button>
+            </div>
+        </div>
+
+        <textarea id="json-editor"
+                  rows="20"
+                  spellcheck="false"
+                  class="input-glass w-full rounded-lg px-4 py-3 text-gray-100 font-mono text-sm resize-y"
+                  oninput="validateJson()">{{ content }}</textarea>
+
+        <div id="validation-error" class="mt-3 text-sm text-red-400 hidden"></div>
+
+        <!-- Actions -->
+        <div class="flex items-center gap-4 mt-4">
+            <button id="save-btn"
+                    onclick="savePreset()"
+                    class="btn-primary text-white py-3 px-6 rounded-xl font-medium flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+                Save Changes
+            </button>
+            <button onclick="resetEditor()"
+                    class="btn-secondary text-gray-300 py-3 px-6 rounded-xl font-medium">
+                Reset
+            </button>
+            <div id="save-result"></div>
+        </div>
+    </div>
+
+    <!-- Required Keys Info -->
+    <div class="glass-card rounded-2xl p-6 mb-6">
+        <label class="text-xs font-medium text-gray-500 mb-3 block uppercase tracking-wider">Required Keys</label>
+        <div class="flex flex-wrap gap-2">
+            {% for key in required_keys %}
+            <span class="text-xs bg-white/5 text-gray-400 px-2 py-1 rounded font-mono">{{ key }}</span>
+            {% endfor %}
+        </div>
+        <p class="text-xs text-gray-500 mt-3">
+            These keys must be present for the preset to be valid.
+        </p>
+    </div>
+
+    <!-- Backup History -->
+    <div class="glass-card rounded-2xl p-6">
+        <div class="flex items-center justify-between mb-4">
+            <label class="text-xs font-medium text-gray-500 uppercase tracking-wider">Backup History</label>
+            <button onclick="loadHistory()"
+                    class="text-xs text-blue-400 hover:text-blue-300">
+                Refresh
+            </button>
+        </div>
+
+        <div id="history-list" class="space-y-2">
+            {% if backups %}
+            {% for backup in backups %}
+            <div class="flex items-center justify-between py-2 border-b border-white/5">
+                <div>
+                    <span class="text-sm text-gray-300 font-mono">{{ backup.filename }}</span>
+                    <span class="text-xs text-gray-500 ml-2">{{ backup.timestamp }}</span>
+                </div>
+                <button onclick="restoreBackup('{{ backup.filename }}')"
+                        class="text-xs text-purple-400 hover:text-purple-300">
+                    Restore
+                </button>
+            </div>
+            {% endfor %}
+            {% else %}
+            <p class="text-sm text-gray-500">No backups yet. Changes will create automatic backups.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- File Path -->
+    <div class="mt-6 text-center">
+        <code class="code-block text-xs text-gray-500 px-3 py-2 rounded-lg inline-block">{{ preset_path }}</code>
+    </div>
+</div>
+
+<script>
+    const originalContent = {{ content | tojson }};
+    let isValid = true;
+
+    function validateJson() {
+        const editor = document.getElementById('json-editor');
+        const errorDiv = document.getElementById('validation-error');
+        const statusSpan = document.getElementById('validation-status');
+        const saveBtn = document.getElementById('save-btn');
+
+        try {
+            JSON.parse(editor.value);
+            errorDiv.classList.add('hidden');
+            statusSpan.textContent = 'Valid JSON';
+            statusSpan.classList.remove('text-red-400');
+            statusSpan.classList.add('text-green-400');
+            saveBtn.disabled = false;
+            saveBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            isValid = true;
+        } catch (e) {
+            errorDiv.textContent = e.message;
+            errorDiv.classList.remove('hidden');
+            statusSpan.textContent = 'Invalid JSON';
+            statusSpan.classList.remove('text-green-400');
+            statusSpan.classList.add('text-red-400');
+            saveBtn.disabled = true;
+            saveBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            isValid = false;
+        }
+    }
+
+    function formatJson() {
+        const editor = document.getElementById('json-editor');
+        try {
+            const parsed = JSON.parse(editor.value);
+            editor.value = JSON.stringify(parsed, null, 2);
+            validateJson();
+        } catch (e) {
+            // Can't format invalid JSON
+        }
+    }
+
+    function resetEditor() {
+        document.getElementById('json-editor').value = originalContent;
+        validateJson();
+    }
+
+    function savePreset() {
+        if (!isValid) return;
+
+        const editor = document.getElementById('json-editor');
+        const resultDiv = document.getElementById('save-result');
+
+        resultDiv.innerHTML = '<span class="text-gray-400 text-sm">Saving...</span>';
+
+        fetch('/api/presets/{{ category }}/{{ preset_name }}/content', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content: editor.value })
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(data => {
+                    throw new Error(data.detail || 'Save failed');
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            resultDiv.innerHTML = '<span class="text-green-400 text-sm">Saved! Backup created.</span>';
+            setTimeout(() => { resultDiv.innerHTML = ''; }, 3000);
+            loadHistory();
+        })
+        .catch(err => {
+            resultDiv.innerHTML = `<span class="text-red-400 text-sm">Error: ${err.message}</span>`;
+        });
+    }
+
+    function loadHistory() {
+        fetch('/api/presets/{{ category }}/{{ preset_name }}/history')
+        .then(response => response.json())
+        .then(data => {
+            const list = document.getElementById('history-list');
+            if (data.backups && data.backups.length > 0) {
+                list.innerHTML = data.backups.map(b => `
+                    <div class="flex items-center justify-between py-2 border-b border-white/5">
+                        <div>
+                            <span class="text-sm text-gray-300 font-mono">${b.filename}</span>
+                            <span class="text-xs text-gray-500 ml-2">${b.timestamp}</span>
+                        </div>
+                        <button onclick="restoreBackup('${b.filename}')"
+                                class="text-xs text-purple-400 hover:text-purple-300">
+                            Restore
+                        </button>
+                    </div>
+                `).join('');
+            } else {
+                list.innerHTML = '<p class="text-sm text-gray-500">No backups yet.</p>';
+            }
+        });
+    }
+
+    function restoreBackup(filename) {
+        if (!confirm(`Restore preset from ${filename}? Current content will be backed up first.`)) {
+            return;
+        }
+
+        fetch(`/api/presets/{{ category }}/{{ preset_name }}/restore/${filename}`, {
+            method: 'POST'
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Restore failed');
+            return response.json();
+        })
+        .then(data => {
+            alert('Preset restored successfully. Refreshing...');
+            window.location.reload();
+        })
+        .catch(err => {
+            alert('Error restoring preset: ' + err.message);
+        });
+    }
+
+    // Initial validation
+    validateJson();
+</script>
+{% endblock %}

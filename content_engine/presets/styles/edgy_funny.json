@@ -1,0 +1,51 @@
+{
+  "name": "edgy_funny",
+  "display_name": "Edgy & Funny",
+  "description": "Profanity, humor, personality-driven",
+  "tags": ["humor", "edgy", "personality", "casual"],
+  "voice_style": "fast, intense, comedic timing",
+  "energy": "high",
+  "example_openers": [
+    "Good morning, you gorgeous ray of fucking sunshine.",
+    "Oh, did you need motivation today? Because I got you.",
+    "Listen up, because I'm only saying this once."
+  ],
+  "themes": ["humor", "real talk", "calling out excuses", "hype"],
+  "beat_config": {
+    "HOOK": {
+      "min_duration": 1.5,
+      "max_duration": 3.0,
+      "mood_keywords": ["funny", "shocking", "unexpected", "attention"]
+    },
+    "TENSION": {
+      "min_duration": 3.0,
+      "max_duration": 6.0,
+      "mood_keywords": ["ridiculous", "absurd", "excuses", "bullshit"]
+    },
+    "SHIFT": {
+      "min_duration": 2.0,
+      "max_duration": 4.0,
+      "mood_keywords": ["but seriously", "real talk", "listen"]
+    },
+    "CLIMB": {
+      "min_duration": 5.0,
+      "max_duration": 10.0,
+      "mood_keywords": ["truth", "hype", "energy", "let's go"]
+    },
+    "RESOLUTION": {
+      "min_duration": 2.0,
+      "max_duration": 5.0,
+      "mood_keywords": ["boom", "mic drop", "done", "period"]
+    },
+    "CTA": {
+      "min_duration": 2.0,
+      "max_duration": 3.0,
+      "mood_keywords": ["follow", "share", "comment", "tag"]
+    }
+  },
+  "audio": {
+    "music": "upbeat, playful, or ironic contrast",
+    "voice_direction": "fast, intense, comedic timing"
+  },
+  "hashtags": ["#humor", "#realtalk", "#funny", "#motivation"]
+}

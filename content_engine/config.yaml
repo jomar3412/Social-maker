@@ -1,0 +1,72 @@
+# Content Engine Configuration
+# All paths are relative to this file or use ~ for home directory expansion
+
+gdrive:
+  mount_path: "~/gdrive_mount"
+  mount_name: "G Drive"
+  output_root: "content_engine"  # Output folder within mount: {mount}/{output_root}/{niche}/{style}/{date}/{run_id}/
+  rclone_remote: "gdrive:Social_Maker"
+  attempt_auto_remount: true
+  mount_command: "rclone mount {remote} {path} --daemon --vfs-cache-mode writes"
+  unmount_command: "fusermount -uz {path}"
+
+# API Keys (loaded from environment variables)
+api_keys:
+  anthropic: "${ANTHROPIC_API_KEY}"
+  openai: "${OPENAI_API_KEY}"
+  google: "${GOOGLE_API_KEY}"
+  xai: "${XAI_API_KEY}"
+  elevenlabs: "${ELEVENLABS_API_KEY}"
+
+# Cache settings
+cache:
+  enabled: true
+  directory: "./cache"
+  ttl_hours:
+    research: 4
+    draft: 24
+    hook: 24
+    relevance: 4
+    finalize: 24
+    shot_list: 24
+    nanobanana: 168  # 7 days
+
+# Budget defaults
+budget:
+  default_max_calls: 10
+  budget_mode_max_calls: 3
+  unlimited_max_calls: 50
+
+# Wizard UI settings
+wizard:
+  default_host: "127.0.0.1"
+  default_port: 8080
+
+# Provider settings
+# Options: "stub" (mock responses), "cli" (local CLI commands)
+provider:
+  type: "cli"  # Using CLI provider for actual AI generation
+  timeout_seconds: 120
+  max_retries: 2
+  cli_model: "claude"  # claude, gemini, codex (for CLI provider)
+  stub_delay_ms: 100  # Simulated delay for stub provider
+
+# Concurrency limits
+concurrency:
+  max_active_runs: 2  # Max simultaneous pipeline runs
+  max_regenerations_per_run: 3  # Max script regenerations per run
+
+# Logging
+logging:
+  level: "INFO"
+  directory: "./logs"
+
+# Storage management
+storage:
+  root_path: "/home/markhuerta/gdrive_mount/content_engine"
+  max_storage_gb: 50.0            # Max storage limit (0 = unlimited)
+  cleanup_threshold_pct: 90.0     # Trigger cleanup at this % of max
+  cleanup_target_pct: 70.0        # Target % after cleanup
+  deletion_policy: "assets_only"  # "full" or "assets_only" (keeps metadata/logs)
+  delete_rejected_images: true    # Auto-delete rejected image iterations
+  delete_intermediate_videos: true # Auto-delete intermediate video files after publish

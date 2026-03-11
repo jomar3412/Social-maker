@@ -1,0 +1,38 @@
+{
+  "version": "1.0.0",
+  "last_updated": "2026-02-25",
+  "documents": [
+    {
+      "id": "dopamine_spec_v1",
+      "type": "spec",
+      "scope": "external",
+      "path": "external/specs/dopamine_content_engine_spec.md",
+      "title": "Dopamine Content Engine Specification",
+      "description": "Defines structural rules for integrating the Dopamine Ladder framework into the Content Engine pipeline. Contains validation logic for all 6 dopamine levels.",
+      "source": "user_provided",
+      "added_at": "2026-02-25",
+      "tags": ["dopamine_ladder", "hooks", "pipeline", "validation", "content_modes"],
+      "priority": "authoritative",
+      "sections": {
+        "dopamine_levels": {
+          "level_1_stimulation": "Interrupt scroll within 1-2 seconds",
+          "level_2_captivation": "Trigger curiosity question before 5 seconds",
+          "level_3_anticipation": "Delay resolution with anticipation beats",
+          "level_4_validation": "Close loop and deliver payoff",
+          "level_5_affection": "Brand trust building",
+          "level_6_revelation": "Long-term creator association"
+        },
+        "content_modes": ["ai_generated", "real_shoot", "hybrid"],
+        "enforcement": ["prevent_premature_validation", "require_curiosity_loops", "require_anticipation", "require_brand_layer"]
+      }
+    }
+  ],
+  "internal_insights": [],
+  "internal_patterns": [],
+  "internal_rules": [],
+  "config": {
+    "sample_size_threshold": 10,
+    "conflict_resolution": "prefer_internal_when_threshold_met",
+    "auto_learn_enabled": true
+  }
+}

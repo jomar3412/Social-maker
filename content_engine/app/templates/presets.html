@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}Content Engine - Presets{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-semibold tracking-tight">Presets</h1>
+        <a href="/wizard" class="text-blue-400 hover:text-blue-300 text-sm">
+            &larr; Back to Wizard
+        </a>
+    </div>
+
+    <p class="text-gray-500 text-sm mb-8">
+        View and edit preset configurations. Changes are versioned with automatic backups.
+    </p>
+
+    <!-- Niches -->
+    <div class="mb-8">
+        <h2 class="text-xs font-medium text-gray-500 mb-4 uppercase tracking-wider">Niches</h2>
+        <div class="space-y-2">
+            {% for preset in niches %}
+            <div class="glass-card rounded-xl p-4 flex items-center justify-between">
+                <div>
+                    <div class="font-medium text-gray-200">{{ preset.data.display_name }}</div>
+                    <div class="text-xs text-gray-500 mt-1">{{ preset.data.description or 'No description' }}</div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <a href="/wizard/presets/niche/{{ preset.name }}"
+                       class="text-xs text-gray-400 hover:text-gray-300 px-3 py-1.5 rounded bg-white/5 hover:bg-white/10">
+                        Stats
+                    </a>
+                    <a href="/wizard/presets/niches/{{ preset.name }}/edit"
+                       class="text-xs text-blue-400 hover:text-blue-300 px-3 py-1.5 rounded bg-blue-500/10 hover:bg-blue-500/20">
+                        Edit
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Styles -->
+    <div class="mb-8">
+        <h2 class="text-xs font-medium text-gray-500 mb-4 uppercase tracking-wider">Styles</h2>
+        <div class="space-y-2">
+            {% for preset in styles %}
+            <div class="glass-card rounded-xl p-4 flex items-center justify-between">
+                <div>
+                    <div class="font-medium text-gray-200">{{ preset.data.display_name }}</div>
+                    <div class="text-xs text-gray-500 mt-1">
+                        {{ preset.data.description or 'No description' }}
+                        {% if preset.data.energy %}
+                        <span class="ml-2 px-2 py-0.5 rounded text-xs
+                                     {% if preset.data.energy == 'high' %}bg-red-500/20 text-red-300
+                                     {% elif preset.data.energy == 'medium' %}bg-yellow-500/20 text-yellow-300
+                                     {% else %}bg-blue-500/20 text-blue-300{% endif %}">
+                            {{ preset.data.energy }}
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <a href="/wizard/presets/style/{{ preset.name }}"
+                       class="text-xs text-gray-400 hover:text-gray-300 px-3 py-1.5 rounded bg-white/5 hover:bg-white/10">
+                        Stats
+                    </a>
+                    <a href="/wizard/presets/styles/{{ preset.name }}/edit"
+                       class="text-xs text-blue-400 hover:text-blue-300 px-3 py-1.5 rounded bg-blue-500/10 hover:bg-blue-500/20">
+                        Edit
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Voices -->
+    <div class="mb-8">
+        <h2 class="text-xs font-medium text-gray-500 mb-4 uppercase tracking-wider">Voices</h2>
+        <div class="space-y-2">
+            {% for preset in voices %}
+            <div class="glass-card rounded-xl p-4 flex items-center justify-between">
+                <div>
+                    <div class="font-medium text-gray-200">{{ preset.data.display_name }}</div>
+                    <div class="text-xs text-gray-500 mt-1">{{ preset.data.description or 'No description' }}</div>
+                </div>
+                <a href="/wizard/presets/voices/{{ preset.name }}/edit"
+                   class="text-xs text-blue-400 hover:text-blue-300 px-3 py-1.5 rounded bg-blue-500/10 hover:bg-blue-500/20">
+                    Edit
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Visuals -->
+    <div class="mb-8">
+        <h2 class="text-xs font-medium text-gray-500 mb-4 uppercase tracking-wider">Visuals</h2>
+        <div class="space-y-2">
+            {% for preset in visuals %}
+            <div class="glass-card rounded-xl p-4 flex items-center justify-between">
+                <div>
+                    <div class="font-medium text-gray-200">{{ preset.data.display_name }}</div>
+                    <div class="text-xs text-gray-500 mt-1">{{ preset.data.description or 'No description' }}</div>
+                </div>
+                <a href="/wizard/presets/visuals/{{ preset.name }}/edit"
+                   class="text-xs text-blue-400 hover:text-blue-300 px-3 py-1.5 rounded bg-blue-500/10 hover:bg-blue-500/20">
+                    Edit
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Realism -->
+    <div class="mb-8">
+        <h2 class="text-xs font-medium text-gray-500 mb-4 uppercase tracking-wider">Realism Modes</h2>
+        <div class="space-y-2">
+            {% for preset in realism %}
+            <div class="glass-card rounded-xl p-4 flex items-center justify-between">
+                <div>
+                    <div class="font-medium text-gray-200">{{ preset.data.display_name }}</div>
+                    <div class="text-xs text-gray-500 mt-1">{{ preset.data.description or 'No description' }}</div>
+                </div>
+                <a href="/wizard/presets/realism/{{ preset.name }}/edit"
+                   class="text-xs text-blue-400 hover:text-blue-300 px-3 py-1.5 rounded bg-blue-500/10 hover:bg-blue-500/20">
+                    Edit
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

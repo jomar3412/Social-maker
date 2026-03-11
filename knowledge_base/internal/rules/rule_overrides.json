@@ -1,0 +1,39 @@
+{
+  "version": "1.0.0",
+  "last_updated": null,
+  "overrides": [],
+  "override_schema": {
+    "id": "string - unique identifier",
+    "external_rule": {
+      "source_doc": "string - path to external spec",
+      "rule_id": "string - identifier of the rule being overridden",
+      "original_value": "any - the external spec value"
+    },
+    "internal_override": {
+      "new_value": "any - the performance-based override",
+      "reason": "string - why this override exists",
+      "evidence": {
+        "run_count": "number",
+        "performance_improvement": "number - % improvement",
+        "confidence": "low|medium|high"
+      }
+    },
+    "scope": {
+      "niche": "string|null",
+      "style": "string|null",
+      "visual_mode": "string|null"
+    },
+    "status": "active|disabled|pending_review",
+    "created_at": "ISO date",
+    "expires_at": "ISO date|null - null means permanent until disabled"
+  },
+  "global_settings": {
+    "allow_global_overrides": false,
+    "require_manual_approval_for_critical": true,
+    "critical_rules": [
+      "dopamine_level_1_timing",
+      "dopamine_level_2_curiosity_loop",
+      "hook_max_duration"
+    ]
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "name": "standard",
+  "display_name": "Standard Quality",
+  "description": "Balanced quality settings for faster generation",
+  "tags": ["standard", "balanced", "fast"],
+  "ai_generation": {
+    "steps": 30,
+    "cfg_scale": 7,
+    "sampler": "euler_a"
+  },
+  "quality": {
+    "output_resolution": "1080x1920",
+    "bitrate": "8M",
+    "fps": 24
+  },
+  "processing": {
+    "upscale": false,
+    "denoise": false,
+    "color_correct": true
+  },
+  "prompt_modifiers": []
+}

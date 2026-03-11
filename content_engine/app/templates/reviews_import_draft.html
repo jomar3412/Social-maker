@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+
+{% block title %}Content Engine - Review Extracted Data{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-2xl font-semibold tracking-tight">Review Extracted Data</h1>
+            <p class="text-gray-500 text-sm mt-1">Verify and correct values before saving</p>
+        </div>
+        <a href="/reviews/import" class="text-blue-400 hover:text-blue-300 text-sm">
+            &larr; New Import
+        </a>
+    </div>
+
+    <!-- Warning Banner -->
+    <div class="alert-warning rounded-xl p-4 mb-6 border border-yellow-500/30 bg-yellow-500/10">
+        <div class="flex items-start gap-3">
+            <svg class="w-5 h-5 text-yellow-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+            <div class="text-sm text-yellow-200">
+                <p class="font-medium">Please verify all values before saving</p>
+                <p class="text-yellow-300/80 mt-1">OCR may not be 100% accurate. Check numbers carefully.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Screenshot Preview -->
+        <div class="glass-card rounded-2xl p-6">
+            <label class="block text-xs font-medium text-gray-400 mb-3 uppercase tracking-wider">Screenshot</label>
+            {% if draft.image_path %}
+            <div class="relative">
+                <img src="/api/reviews/drafts/{{ draft.id }}/image" alt="Screenshot" class="rounded-lg w-full max-h-96 object-contain bg-black/20"
+                     onerror="this.src='/static/placeholder-image.png'; this.onerror=null;">
+                <div class="absolute top-2 right-2">
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-{{ platform_color }}-500/20 text-{{ platform_color }}-300 border border-{{ platform_color }}-500/30">
+                        {{ draft.platform | title }}
+                    </span>
+                </div>
+            </div>
+            {% else %}
+            <div class="bg-black/20 rounded-lg h-48 flex items-center justify-center">
+                <span class="text-gray-600">No preview available</span>
+            </div>
+            {% endif %}
+
+            <!-- Extracted Text (Collapsible) -->
+            <details class="mt-4">
+                <summary class="text-xs text-gray-500 cursor-pointer hover:text-gray-400">
+                    View extracted text (raw OCR output)
+                </summary>
+                <pre class="mt-2 text-xs text-gray-600 bg-black/20 rounded-lg p-3 max-h-48 overflow-auto whitespace-pre-wrap">{{ extracted.extracted_text or 'No text extracted' }}</pre>
+            </details>
+
+            {% if extracted.parse_errors %}
+            <div class="mt-4 text-xs text-red-400">
+                <p class="font-medium">Parse errors:</p>
+                <ul class="list-disc list-inside text-red-300/80">
+                    {% for error in extracted.parse_errors %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Confirmation Form -->
+        <div>
+            <form hx-post="/api/reviews/drafts/{{ draft.id }}/confirm"
+                  hx-target="#confirm-result"
+                  class="space-y-4">
+
+                <!-- Link to Run (Required) -->
+                <div class="glass-card rounded-xl p-4">
+                    <label class="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wider">
+                        Link to Run <span class="text-red-400">*</span>
+                    </label>
+                    <select name="run_id" required class="input-glass w-full rounded-lg px-4 py-2.5 text-gray-100">
+                        <option value="">Select a run...</option>
+                        {% for run in recent_runs %}
+                        <option value="{{ run.run_id }}" {% if draft.run_id == run.run_id %}selected{% endif %}>
+                            {{ run.display_title or run.run_id }} ({{ run.created_at[:10] }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Metrics -->
+                <div class="glass-card rounded-xl p-4 space-y-4">
+                    <label class="block text-xs font-medium text-gray-400 uppercase tracking-wider">Extracted Metrics</label>
+
+                    <!-- Views -->
+                    <div class="flex items-center gap-3">
+                        <div class="flex-1">
+                            <label class="block text-xs text-gray-500 mb-1">Views</label>
+                            <input type="number" name="views" value="{{ extracted.views or '' }}"
+                                   class="input-glass w-full rounded-lg px-3 py-2 text-gray-100" min="0">
+                        </div>
+                        {% if extracted.confidence.views %}
+                        <span class="confidence-badge confidence-{{ extracted.confidence.views }}">
+                            {{ extracted.confidence.views }}
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Avg Watch Time -->
+                    <div class="flex items-center gap-3">
+                        <div class="flex-1">
+                            <label class="block text-xs text-gray-500 mb-1">Avg Watch Time (seconds)</label>
+                            <input type="number" name="avg_watch_time_seconds" value="{{ extracted.avg_watch_time_seconds or '' }}"
+                                   class="input-glass w-full rounded-lg px-3 py-2 text-gray-100" min="0" step="0.1">
+                        </div>
+                        {% if extracted.confidence.avg_watch_time_seconds %}
+                        <span class="confidence-badge confidence-{{ extracted.confidence.avg_watch_time_seconds }}">
+                            {{ extracted.confidence.avg_watch_time_seconds }}
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Retention -->
+                    <div class="flex items-center gap-3">
+                        <div class="flex-1">
+                            <label class="block text-xs text-gray-500 mb-1">Retention %</label>
+                            <input type="number" name="retention_percent" value="{{ extracted.retention_percent or '' }}"
+                                   class="input-glass w-full rounded-lg px-3 py-2 text-gray-100" min="0" max="100" step="0.1">
+                        </div>
+                        {% if extracted.confidence.retention_percent %}
+                        <span class="confidence-badge confidence-{{ extracted.confidence.retention_percent }}">
+                            {{ extracted.confidence.retention_percent }}
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Likes -->
+                    <div class="flex items-center gap-3">
+                        <div class="flex-1">
+                            <label class="block text-xs text-gray-500 mb-1">Likes</label>
+                            <input type="number" name="likes" value="{{ extracted.likes or '' }}"
+                                   class="input-glass w-full rounded-lg px-3 py-2 text-gray-100" min="0">
+                        </div>
+                        {% if extracted.confidence.likes %}
+                        <span class="confidence-badge confidence-{{ extracted.confidence.likes }}">
+                            {{ extracted.confidence.likes }}
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Comments -->
+                    <div class="flex items-center gap-3">
+                        <div class="flex-1">
+                            <label class="block text-xs text-gray-500 mb-1">Comments</label>
+                            <input type="number" name="comments" value="{{ extracted.comments or '' }}"
+                                   class="input-glass w-full rounded-lg px-3 py-2 text-gray-100" min="0">
+                        </div>
+                        {% if extracted.confidence.comments %}
+                        <span class="confidence-badge confidence-{{ extracted.confidence.comments }}">
+                            {{ extracted.confidence.comments }}
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Shares -->
+                    <div class="flex items-center gap-3">
+                        <div class="flex-1">
+                            <label class="block text-xs text-gray-500 mb-1">Shares</label>
+                            <input type="number" name="shares" value="{{ extracted.shares or '' }}"
+                                   class="input-glass w-full rounded-lg px-3 py-2 text-gray-100" min="0">
+                        </div>
+                        {% if extracted.confidence.shares %}
+                        <span class="confidence-badge confidence-{{ extracted.confidence.shares }}">
+                            {{ extracted.confidence.shares }}
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Extra Metrics (if any) -->
+                {% if extracted.extra_metrics %}
+                <div class="glass-card rounded-xl p-4">
+                    <label class="block text-xs font-medium text-gray-400 mb-3 uppercase tracking-wider">Extra Metrics</label>
+                    <div class="space-y-2 text-sm">
+                        {% for key, value in extracted.extra_metrics.items() %}
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">{{ key | replace('_', ' ') | title }}</span>
+                            <span class="text-gray-300">{{ value }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Post Info -->
+                <div class="glass-card rounded-xl p-4 space-y-4">
+                    <label class="block text-xs font-medium text-gray-400 uppercase tracking-wider">Post Info</label>
+
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">Post URL</label>
+                        <input type="url" name="posted_url" value="{{ draft.post_url or '' }}"
+                               placeholder="https://..."
+                               class="input-glass w-full rounded-lg px-3 py-2 text-gray-100">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">Post Date</label>
+                        <input type="date" name="post_date"
+                               class="input-glass w-full rounded-lg px-3 py-2 text-gray-100">
+                    </div>
+                </div>
+
+                <!-- Notes -->
+                <div class="glass-card rounded-xl p-4">
+                    <label class="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wider">Notes</label>
+                    <textarea name="feedback_notes" rows="2" placeholder="Any notes about this import..."
+                              class="input-glass w-full rounded-lg px-3 py-2 text-gray-100 resize-none text-sm"></textarea>
+                </div>
+
+                <!-- Submit -->
+                <div class="flex items-center gap-4">
+                    <button type="submit" class="btn-success text-white py-3 px-6 rounded-xl font-medium flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Confirm & Save Review
+                    </button>
+                    <button type="button" onclick="deleteDraft({{ draft.id }})"
+                            class="text-red-400 hover:text-red-300 text-sm">
+                        Discard
+                    </button>
+                </div>
+
+                <div id="confirm-result"></div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .confidence-badge {
+        font-size: 0.65rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 9999px;
+        font-weight: 500;
+        text-transform: uppercase;
+    }
+    .confidence-high {
+        background-color: rgba(34, 197, 94, 0.2);
+        color: rgb(134, 239, 172);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+    .confidence-medium {
+        background-color: rgba(234, 179, 8, 0.2);
+        color: rgb(253, 224, 71);
+        border: 1px solid rgba(234, 179, 8, 0.3);
+    }
+    .confidence-low {
+        background-color: rgba(239, 68, 68, 0.2);
+        color: rgb(252, 165, 165);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+</style>
+
+<script>
+    function deleteDraft(draftId) {
+        if (!confirm('Are you sure you want to discard this import?')) return;
+
+        fetch(`/api/reviews/drafts/${draftId}`, { method: 'DELETE' })
+            .then(response => {
+                if (response.ok) {
+                    window.location.href = '/reviews/import';
+                } else {
+                    alert('Failed to delete draft');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Error deleting draft');
+            });
+    }
+</script>
+{% endblock %}

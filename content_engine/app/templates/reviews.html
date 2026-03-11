@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}Content Engine - Reviews{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-2xl font-semibold tracking-tight">Reviews</h1>
+            <p class="text-gray-500 text-sm mt-1">Posted content ready for performance review</p>
+        </div>
+        <a href="/reviews/import" class="btn-secondary text-gray-300 px-4 py-2 rounded-lg text-sm font-medium">
+            Import Analytics
+        </a>
+    </div>
+
+    {% if posted_runs %}
+    <div class="space-y-3">
+        {% for run in posted_runs %}
+        <a href="/wizard/feedback/{{ run.run_id }}"
+           class="glass-card card-interactive block rounded-xl p-4">
+            <div class="flex items-start justify-between">
+                <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="text-gray-100 font-medium">{{ run.display_title or run.run_id }}</span>
+                        <span class="{{ run.workflow_stage.badge_classes }} px-2 py-0.5 rounded text-xs">
+                            {{ run.workflow_stage.display_name }}
+                        </span>
+                    </div>
+                    <div class="text-xs text-gray-500">
+                        <span class="font-mono text-gray-600">{{ run.run_id }}</span>
+                        <span class="text-gray-700 mx-1">&bull;</span>
+                        {{ run.config.niche }} / {{ run.config.style }}
+                    </div>
+
+                    {% if run.posted_at %}
+                    <div class="text-xs text-gray-600 mt-2">
+                        Posted: {{ run.posted_at[:10] }}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Arrow -->
+                <div class="text-gray-600 ml-4">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+
+    {% elif runs_with_feedback %}
+    <!-- Fallback: Show runs with feedback if no posted runs yet -->
+    <div class="space-y-3">
+        {% for run, feedback in runs_with_feedback %}
+        <a href="/wizard/feedback/{{ run.run_id }}"
+           class="glass-card card-interactive block rounded-xl p-4">
+            <div class="flex items-start justify-between">
+                <div class="flex-1">
+                    <span class="text-gray-100 font-medium">{{ run.display_title or run.run_id }}</span>
+                    <div class="text-xs text-gray-500 mt-1">
+                        <span class="font-mono text-gray-600">{{ run.run_id }}</span>
+                        <span class="text-gray-700 mx-1">&bull;</span>
+                        {{ run.config.niche }} / {{ run.config.style }}
+                    </div>
+
+                    <!-- Ratings -->
+                    {% if feedback.script_quality or feedback.hook_strength or feedback.visual_match %}
+                    <div class="flex items-center gap-4 mt-3">
+                        {% if feedback.script_quality %}
+                        <div class="flex items-center gap-1">
+                            <span class="text-xs text-gray-500">Script:</span>
+                            <div class="flex">
+                                {% for i in range(feedback.script_quality) %}
+                                <svg class="w-3 h-3 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                </svg>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if feedback.hook_strength %}
+                        <div class="flex items-center gap-1">
+                            <span class="text-xs text-gray-500">Hook:</span>
+                            <div class="flex">
+                                {% for i in range(feedback.hook_strength) %}
+                                <svg class="w-3 h-3 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                </svg>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Tags -->
+                    {% if feedback.tags %}
+                    <div class="flex flex-wrap gap-1 mt-2">
+                        {% for tag in feedback.tags[:3] %}
+                        <span class="px-2 py-0.5 rounded text-xs bg-white/5 text-gray-500">{{ tag }}</span>
+                        {% endfor %}
+                        {% if feedback.tags|length > 3 %}
+                        <span class="text-xs text-gray-600">+{{ feedback.tags|length - 3 }}</span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Stats Column -->
+                <div class="text-right ml-4">
+                    {% if feedback.publish_status %}
+                    <span class="{% if feedback.publish_status == 'published' %}badge-success{% else %}badge-pending{% endif %} px-2 py-1 rounded text-xs">
+                        {{ feedback.publish_status }}
+                    </span>
+                    {% endif %}
+
+                    {% if feedback.views %}
+                    <div class="text-sm text-gray-300 mt-2">
+                        {{ feedback.views|string|replace('000', 'K') }} views
+                    </div>
+                    {% endif %}
+
+                    {% if feedback.platform %}
+                    <div class="text-xs text-gray-500 mt-1">{{ feedback.platform }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="glass-card rounded-2xl p-10 text-center">
+        <svg class="w-12 h-12 text-gray-700 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+        </svg>
+        <p class="text-gray-500 mb-2">No posted runs yet</p>
+        <p class="text-gray-600 text-sm">Post runs from the Queue to see them here for review.</p>
+        <a href="/queue" class="btn-primary inline-block text-white px-6 py-2.5 rounded-lg text-sm mt-4">
+            Go to Queue
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

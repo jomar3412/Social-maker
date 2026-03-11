@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block title %}Content Engine - Generate{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto">
+    <h1 class="text-2xl font-semibold mb-6 tracking-tight">Generate Content</h1>
+
+    <!-- Drive Status Banner -->
+    {% if not drive_connected %}
+    <div class="alert-error rounded-xl p-4 mb-6">
+        <div class="flex items-center gap-3">
+            <svg class="w-5 h-5 text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+            <div>
+                <p class="text-red-300 font-medium text-sm">G Drive not connected</p>
+                <p class="text-red-400/70 text-xs mt-0.5">{{ drive_error }}</p>
+            </div>
+        </div>
+        {% if mount_command %}
+        <div class="mt-3 code-block rounded-lg p-3 text-xs overflow-x-auto text-gray-300">
+            {{ mount_command }}
+        </div>
+        {% endif %}
+    </div>
+    {% else %}
+    <div class="alert-success rounded-xl p-3 mb-6">
+        <div class="flex items-center gap-2 text-green-400 text-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            <span>G Drive connected</span>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Generation Form -->
+    <div class="glass-card rounded-2xl p-6">
+        <form id="generate-form"
+              hx-post="/wizard/start"
+              hx-target="#result"
+              hx-swap="innerHTML"
+              hx-indicator="#loading"
+              class="space-y-5">
+
+            <!-- Niche -->
+            <div>
+                <label class="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wider">Niche</label>
+                <select name="niche" class="input-glass w-full rounded-lg px-4 py-3 text-gray-100">
+                    {% for preset in niches %}
+                    <option value="{{ preset.name }}">{{ preset.data.display_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Style -->
+            <div>
+                <label class="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wider">Style</label>
+                <select name="style" class="input-glass w-full rounded-lg px-4 py-3 text-gray-100">
+                    {% for preset in styles %}
+                    <option value="{{ preset.name }}">{{ preset.data.display_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Voice -->
+            <div>
+                <label class="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wider">Voice</label>
+                <select name="voice_preset" class="input-glass w-full rounded-lg px-4 py-3 text-gray-100">
+                    {% for preset in voices %}
+                    <option value="{{ preset.name }}">{{ preset.data.display_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Visual Mode -->
+            <div>
+                <label class="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wider">Visual Mode</label>
+                <select name="visual_mode" class="input-glass w-full rounded-lg px-4 py-3 text-gray-100">
+                    {% for preset in visuals %}
+                    <option value="{{ preset.name }}" {% if preset.name == 'hybrid' %}selected{% endif %}>
+                        {{ preset.data.display_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Visual Engine -->
+            <div>
+                <label class="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wider">Visual Engine</label>
+                <select name="visual_engine" class="input-glass w-full rounded-lg px-4 py-3 text-gray-100">
+                    <option value="nanobanana" selected>NanoBanana (AI Image Gen)</option>
+                    <option value="cdream">CDream (Alternative AI)</option>
+                    <option value="stock">Stock Footage Only</option>
+                    <option value="custom">Custom (Manual Prompts)</option>
+                </select>
+                <p class="text-xs text-gray-600 mt-1">Engine used for visual prompt generation</p>
+            </div>
+
+            <!-- Topic (optional) -->
+            <div>
+                <label class="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wider">Topic <span class="text-gray-600">(optional)</span></label>
+                <input type="text"
+                       name="topic"
+                       data-dictation
+                       placeholder="Leave blank for random topic"
+                       class="input-glass w-full rounded-lg px-4 py-3 text-gray-100 placeholder-gray-600">
+            </div>
+
+            <!-- Loop-Friendly Ending Toggle -->
+            <div class="flex items-center justify-between p-4 glass-card rounded-xl">
+                <div>
+                    <label class="text-sm font-medium text-gray-200">Loop-Friendly Ending</label>
+                    <p class="text-xs text-gray-500 mt-0.5">Ending flows naturally back to the hook for seamless looping</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" name="loop_friendly_ending" value="true" class="sr-only peer">
+                    <div class="w-11 h-6 bg-gray-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+                </label>
+            </div>
+
+            <!-- Submit -->
+            <button type="submit"
+                    id="submit-btn"
+                    {% if not drive_connected %}disabled{% endif %}
+                    class="btn-primary w-full text-white py-3.5 rounded-xl font-medium flex items-center justify-center gap-2 mt-6">
+                <span id="loading" class="htmx-indicator">
+                    <div class="spinner"></div>
+                </span>
+                <span id="btn-text">Generate Script</span>
+            </button>
+        </form>
+    </div>
+
+    <!-- Result placeholder -->
+    <div id="result" class="mt-6"></div>
+</div>
+
+<script>
+    console.log("HTMX loaded:", !!window.htmx);
+
+    // Disable button on submit to prevent double-clicks
+    document.getElementById('generate-form').addEventListener('htmx:beforeRequest', function(evt) {
+        console.log("[HTMX] beforeRequest - disabling button");
+        const btn = document.getElementById('submit-btn');
+        const btnText = document.getElementById('btn-text');
+        btn.disabled = true;
+        btnText.textContent = 'Generating...';
+    });
+
+    // Log successful response (including redirects)
+    document.getElementById('generate-form').addEventListener('htmx:afterRequest', function(evt) {
+        console.log("[HTMX] afterRequest - status:", evt.detail.xhr?.status, "successful:", evt.detail.successful);
+        // If we got a redirect header, HTMX handles it automatically
+    });
+
+    // Re-enable on error and show message
+    document.getElementById('generate-form').addEventListener('htmx:responseError', function(evt) {
+        console.log("[HTMX] responseError:", evt.detail);
+        const btn = document.getElementById('submit-btn');
+        const btnText = document.getElementById('btn-text');
+        btn.disabled = false;
+        btnText.textContent = 'Generate Script';
+
+        // Show error in result area if not already shown
+        const result = document.getElementById('result');
+        if (!result.innerHTML.includes('alert-error')) {
+            result.innerHTML = '<div class="alert-error rounded-xl p-4"><p class="text-red-300 text-sm">Request failed. Check console for details.</p></div>';
+        }
+    });
+
+    // Handle network errors
+    document.getElementById('generate-form').addEventListener('htmx:sendError', function(evt) {
+        console.log("[HTMX] sendError:", evt.detail);
+        const btn = document.getElementById('submit-btn');
+        const btnText = document.getElementById('btn-text');
+        btn.disabled = false;
+        btnText.textContent = 'Generate Script';
+        document.getElementById('result').innerHTML = '<div class="alert-error rounded-xl p-4"><p class="text-red-300 text-sm">Network error. Server may be down.</p></div>';
+    });
+</script>
+{% endblock %}

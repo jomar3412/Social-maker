@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Content Engine - {{ display_title or run_id }}{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto">
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-2xl font-semibold tracking-tight">{{ display_title or "Generating..." }}</h1>
+        <p class="text-gray-500 text-sm mt-1 font-mono">{{ run_id }}</p>
+    </div>
+
+    <!-- Status Card - This gets polled -->
+    <div id="status-container"
+         hx-get="/api/runs/{{ run_id }}/status-fragment"
+         hx-trigger="load, every 1500ms"
+         hx-swap="innerHTML">
+        {% include "partials/run_status_fragment.html" %}
+    </div>
+
+    <!-- Output Path -->
+    {% if output_path %}
+    <div class="mt-8 text-center">
+        <code class="code-block text-xs text-gray-500 px-3 py-2 rounded-lg inline-block">{{ output_path }}</code>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

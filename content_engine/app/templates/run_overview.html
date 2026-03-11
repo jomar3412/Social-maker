@@ -1,0 +1,384 @@
+{% extends "base.html" %}
+
+{% block title %}Content Engine - {{ display_title or run_id }}{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+        <div class="flex-1">
+            <h1 class="text-2xl font-semibold tracking-tight">{{ display_title or "Run Overview" }}</h1>
+            <p class="text-gray-500 text-sm mt-1 font-mono">{{ run_id }}</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <!-- Status Badge -->
+            {% if stage == "awaiting_script_approval" %}
+            <span class="badge-pending px-3 py-1.5 rounded-full text-xs font-medium">Pending Approval</span>
+            {% elif stage == "complete" %}
+            <span class="badge-success px-3 py-1.5 rounded-full text-xs font-medium">Complete</span>
+            {% elif stage == "failed" %}
+            <span class="badge-error px-3 py-1.5 rounded-full text-xs font-medium">Failed</span>
+            {% elif is_running %}
+            <span class="badge-pending px-3 py-1.5 rounded-full text-xs font-medium animate-pulse">{{ stage_display_name }}</span>
+            {% else %}
+            <span class="px-3 py-1.5 rounded-full text-xs font-medium bg-white/5 text-gray-400">{{ stage_display_name }}</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Progress Bar (if running) -->
+    {% if is_running %}
+    <div class="mb-6">
+        <div class="flex justify-between text-xs text-gray-500 mb-2">
+            <span>{{ stage_display_name }}</span>
+            <span>{{ progress_percent }}%</span>
+        </div>
+        <div class="progress-track h-2 rounded-full">
+            <div class="progress-fill h-full rounded-full transition-all duration-500" style="width: {{ progress_percent }}%"></div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Run Info Card -->
+    <div class="glass-card rounded-2xl p-6 mb-6">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
+            <div>
+                <label class="text-xs text-gray-500 uppercase tracking-wider block mb-1">Niche</label>
+                <span class="text-gray-200 font-medium">{{ niche }}</span>
+            </div>
+            <div>
+                <label class="text-xs text-gray-500 uppercase tracking-wider block mb-1">Style</label>
+                <span class="text-gray-200 font-medium">{{ style }}</span>
+            </div>
+            <div>
+                <label class="text-xs text-gray-500 uppercase tracking-wider block mb-1">Voice</label>
+                <span class="text-gray-200 font-medium">{{ voice_preset or 'default' }}</span>
+            </div>
+            <div>
+                <label class="text-xs text-gray-500 uppercase tracking-wider block mb-1">Visual</label>
+                <span class="text-gray-200 font-medium">{{ visual_mode or 'hybrid' }}</span>
+            </div>
+        </div>
+        <div class="flex items-center justify-between text-xs text-gray-500">
+            <span>Created: {{ created_at[:16] if created_at else 'N/A' }}</span>
+            <div class="flex items-center gap-4">
+                {% if provider_type %}
+                <span class="flex items-center gap-1">
+                    <span class="w-2 h-2 rounded-full {% if provider_type == 'cli' %}bg-green-400{% else %}bg-blue-400{% endif %}"></span>
+                    {{ provider_type|upper }} Provider
+                </span>
+                {% endif %}
+                {% if regenerations_remaining is defined %}
+                <span class="{% if regenerations_remaining == 0 %}text-red-400{% endif %}">
+                    {{ regenerations_remaining }}/{{ max_regenerations }} regens left
+                </span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Hook Preview -->
+    {% if hook %}
+    <div class="glass-card rounded-2xl p-6 mb-6">
+        <label class="text-xs font-medium text-gray-500 mb-3 block uppercase tracking-wider">Hook</label>
+        <div class="hook-highlight rounded-xl p-4 text-lg font-medium text-white">
+            {{ hook }}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Quick Actions -->
+    <div class="glass-card rounded-2xl p-6 mb-6">
+        <label class="text-xs font-medium text-gray-500 mb-4 block uppercase tracking-wider">Actions</label>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <!-- View Script -->
+            {% if stage != "starting" and stage != "queued" and stage != "running" %}
+            <a href="/wizard/approve/{{ run_id }}"
+               class="btn-secondary text-gray-300 py-3 px-4 rounded-xl font-medium text-center text-sm flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                View Script
+            </a>
+            {% endif %}
+
+            <!-- View Shot List -->
+            {% if has_shot_list %}
+            <a href="/runs/{{ run_id }}/shot-list"
+               class="btn-secondary text-gray-300 py-3 px-4 rounded-xl font-medium text-center text-sm flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+                </svg>
+                Shot List
+            </a>
+            {% endif %}
+
+            <!-- Voice Generation -->
+            {% if stage in ['script_approved', 'awaiting_voiceover_approval', 'voiceover_approved', 'complete'] %}
+            <a href="/runs/{{ run_id }}/voice"
+               class="btn-secondary text-gray-300 py-3 px-4 rounded-xl font-medium text-center text-sm flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/>
+                </svg>
+                Voice
+            </a>
+            {% endif %}
+
+            <!-- View Artifacts (Prompts) -->
+            {% if stage == "complete" %}
+            <a href="/runs/{{ run_id }}/artifacts"
+               class="btn-primary text-white py-3 px-4 rounded-xl font-medium text-center text-sm flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                Artifacts &amp; Prompts
+            </a>
+            {% endif %}
+
+            <!-- Copy NanoBanana Prompts -->
+            {% if has_nanobanana %}
+            <button onclick="copyNanobananaPrompts('{{ run_id }}')"
+                    class="btn-secondary text-gray-300 py-3 px-4 rounded-xl font-medium text-center text-sm flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/>
+                </svg>
+                <span id="nano-btn-text">Copy NanoBanana</span>
+            </button>
+            {% endif %}
+
+            <!-- Copy Stock Queries -->
+            {% if has_stock_queries %}
+            <button onclick="copyStockQueries('{{ run_id }}')"
+                    class="btn-secondary text-gray-300 py-3 px-4 rounded-xl font-medium text-center text-sm flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <span id="stock-btn-text">Copy Stock Queries</span>
+            </button>
+            {% endif %}
+
+            <!-- Live Status (if running) -->
+            {% if is_running %}
+            <a href="/runs/{{ run_id }}/status"
+               class="btn-primary text-white py-3 px-4 rounded-xl font-medium text-center text-sm flex items-center justify-center gap-2">
+                <div class="w-2 h-2 rounded-full bg-white animate-pulse"></div>
+                Live Status
+            </a>
+            {% endif %}
+
+            <!-- Approve (if pending) -->
+            {% if stage == "awaiting_script_approval" %}
+            <a href="/wizard/approve/{{ run_id }}"
+               class="btn-success text-white py-3 px-4 rounded-xl font-medium text-center text-sm flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+                Approve Script
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Feedback Section -->
+    <div class="glass-card rounded-2xl p-6 mb-6">
+        <div class="flex items-center justify-between mb-4">
+            <label class="text-xs font-medium text-gray-500 uppercase tracking-wider">Feedback</label>
+            {% if quick_feedback %}
+            <span class="text-xs text-gray-500">Last updated: {{ quick_feedback.updated_at[:10] if quick_feedback.updated_at else 'N/A' }}</span>
+            {% endif %}
+        </div>
+
+        <!-- Quick Rating -->
+        <div class="mb-5">
+            <label class="text-sm text-gray-400 mb-2 block">Quick Rating</label>
+            <div class="flex items-center gap-4">
+                <div class="flex gap-1" id="quick-rating">
+                    {% for i in range(1, 6) %}
+                    <button onclick="setQuickRating('{{ run_id }}', {{ i }})"
+                            class="quick-star {% if quick_feedback and quick_feedback.script_quality and quick_feedback.script_quality >= i %}text-yellow-400{% else %}text-gray-600{% endif %} hover:text-yellow-400 transition-colors">
+                        <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                        </svg>
+                    </button>
+                    {% endfor %}
+                </div>
+                <span id="rating-save-status" class="text-xs text-gray-500"></span>
+            </div>
+        </div>
+
+        <!-- Quick Notes -->
+        <div class="mb-4">
+            <label class="text-sm text-gray-400 mb-2 block">Quick Notes</label>
+            <textarea id="quick-notes"
+                      rows="2"
+                      data-dictation
+                      placeholder="Any quick thoughts about this run..."
+                      class="input-glass w-full rounded-lg px-4 py-3 text-gray-100 resize-none text-sm">{{ quick_feedback.feedback_notes if quick_feedback and quick_feedback.feedback_notes else '' }}</textarea>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <button onclick="saveQuickNotes('{{ run_id }}')"
+                    class="btn-secondary text-gray-300 py-2 px-4 rounded-lg text-sm font-medium">
+                Save Notes
+            </button>
+            <a href="/wizard/feedback/{{ run_id }}"
+               class="text-purple-400 hover:text-purple-300 text-sm">
+                Full Performance Review &rarr;
+            </a>
+            <span id="notes-save-status" class="text-xs text-gray-500"></span>
+        </div>
+    </div>
+
+    <!-- Output Path -->
+    {% if output_path %}
+    <div class="glass-card rounded-2xl p-6 mb-6">
+        <label class="text-xs font-medium text-gray-500 mb-3 block uppercase tracking-wider">Output Folder</label>
+        <div class="code-block rounded-lg p-3 text-xs text-gray-400 overflow-x-auto font-mono">
+            {{ output_path }}
+        </div>
+        {% if has_files %}
+        <div class="mt-4 flex flex-wrap gap-2">
+            {% for file in available_files %}
+            <span class="text-xs bg-white/5 text-gray-400 px-2 py-1 rounded">{{ file }}</span>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Error Message -->
+    {% if error_message %}
+    <div class="alert-error rounded-xl p-4 mb-6">
+        <p class="text-red-300 text-sm">{{ error_message }}</p>
+    </div>
+    {% endif %}
+
+    <!-- Navigation -->
+    <div class="flex gap-3 justify-center">
+        <a href="/library" class="text-gray-400 hover:text-gray-300 text-sm">
+            &larr; Back to Library
+        </a>
+    </div>
+</div>
+
+<!-- Hidden textarea for copy -->
+<textarea id="nanobanana-content" class="hidden">{{ nanobanana_content or '' }}</textarea>
+<textarea id="stock-queries-content" class="hidden">{{ stock_queries_content or '' }}</textarea>
+
+<script>
+    function copyToClipboard(content, btnTextElement, originalText) {
+        navigator.clipboard.writeText(content).then(() => {
+            // Success - show green feedback
+            btnTextElement.textContent = 'Copied!';
+            btnTextElement.parentElement.classList.add('text-green-400');
+            btnTextElement.parentElement.classList.remove('text-gray-300');
+
+            setTimeout(() => {
+                btnTextElement.textContent = originalText;
+                btnTextElement.parentElement.classList.remove('text-green-400');
+                btnTextElement.parentElement.classList.add('text-gray-300');
+            }, 1500);
+        }).catch(err => {
+            console.error('Clipboard write failed:', err);
+
+            // Fallback method
+            const textarea = document.createElement('textarea');
+            textarea.value = content;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+
+            try {
+                document.execCommand('copy');
+                btnTextElement.textContent = 'Copied!';
+                btnTextElement.parentElement.classList.add('text-green-400');
+            } catch (e) {
+                btnTextElement.textContent = 'Failed';
+                btnTextElement.parentElement.classList.add('text-red-400');
+            }
+            document.body.removeChild(textarea);
+
+            setTimeout(() => {
+                btnTextElement.textContent = originalText;
+                btnTextElement.parentElement.classList.remove('text-green-400', 'text-red-400');
+                btnTextElement.parentElement.classList.add('text-gray-300');
+            }, 1500);
+        });
+    }
+
+    function copyNanobananaPrompts(runId) {
+        const content = document.getElementById('nanobanana-content').value;
+        if (!content) {
+            alert('No NanoBanana prompts available');
+            return;
+        }
+        const btn = document.getElementById('nano-btn-text');
+        copyToClipboard(content, btn, 'Copy NanoBanana');
+    }
+
+    function copyStockQueries(runId) {
+        const content = document.getElementById('stock-queries-content').value;
+        if (!content) {
+            alert('No stock queries available');
+            return;
+        }
+        const btn = document.getElementById('stock-btn-text');
+        copyToClipboard(content, btn, 'Copy Stock Queries');
+    }
+
+    function setQuickRating(runId, rating) {
+        // Update UI immediately
+        const stars = document.querySelectorAll('#quick-rating .quick-star');
+        stars.forEach((star, index) => {
+            if (index < rating) {
+                star.classList.remove('text-gray-600');
+                star.classList.add('text-yellow-400');
+            } else {
+                star.classList.remove('text-yellow-400');
+                star.classList.add('text-gray-600');
+            }
+        });
+
+        // Save via API
+        const status = document.getElementById('rating-save-status');
+        status.textContent = 'Saving...';
+
+        fetch(`/api/runs/${runId}/quick-feedback`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ script_quality: rating })
+        })
+        .then(response => response.json())
+        .then(data => {
+            status.textContent = 'Saved!';
+            setTimeout(() => { status.textContent = ''; }, 2000);
+        })
+        .catch(err => {
+            status.textContent = 'Error saving';
+            console.error(err);
+        });
+    }
+
+    function saveQuickNotes(runId) {
+        const notes = document.getElementById('quick-notes').value;
+        const status = document.getElementById('notes-save-status');
+        status.textContent = 'Saving...';
+
+        fetch(`/api/runs/${runId}/quick-feedback`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ feedback_notes: notes })
+        })
+        .then(response => response.json())
+        .then(data => {
+            status.textContent = 'Saved!';
+            setTimeout(() => { status.textContent = ''; }, 2000);
+        })
+        .catch(err => {
+            status.textContent = 'Error saving';
+            console.error(err);
+        });
+    }
+</script>
+{% endblock %}

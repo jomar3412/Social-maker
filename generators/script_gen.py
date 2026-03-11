@@ -99,30 +99,70 @@ def _generate_via_api(content_type):
     client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
 
     if content_type == "motivation":
-        prompt = (
-            "Generate a short, powerful Stoic/motivational quote for a social media video. "
-            "Respond in JSON: {\"quote\": \"...\", \"author\": \"...\", \"caption\": \"...\", "
-            "\"hashtags\": [\"#...\"], \"category\": \"stoicism|motivation|discipline\"}"
-        )
+        # Load style guide for motivation
+        try:
+            from training.niche_config import NicheConfig
+            config = NicheConfig("motivation")
+            style_additions = config.get_prompt_additions()
+        except Exception:
+            style_additions = ""
+
+        prompt = f"""Generate a motivational script for a 45-60 second TikTok/YouTube Short.
+
+CRITICAL RULES:
+- NO historical figures or quotes (no Seneca, Marcus Aurelius, etc.)
+- NO sensitive topics (slavery, holocaust, abuse, suicide, tragedies)
+- Speak directly to "you" - make it personal
+- Acknowledge real human struggles (exhaustion, doubt, pain)
+- NOT preachy or lecturing - like a supportive friend
+
+SCRIPT TYPES (pick one):
+1. AFFIRMING: "You did good today" - validating the viewer's unseen struggles
+2. FUTURE_ACCOUNTABILITY: "One year from now..." - connecting today's choices to future
+3. AGGRESSIVE_ENERGY: High energy wake-up call, demanding action
+4. CALM_MINIMAL: Short, peaceful, reflective
+5. EDGY_FUNNY: Personality-driven, can use mild profanity, humor
+
+{style_additions}
+
+EXAMPLES OF GOOD HOOKS:
+- "You did good today. Really good."
+- "One year from today, you're either going to thank yourself or kick yourself."
+- "Seems like you forgot again, so let me remind you."
+- "Good morning, you gorgeous ray of sunshine."
+
+Respond in JSON:
+{{
+  "script_type": "affirming|future_accountability|aggressive_energy|calm_minimal|edgy_funny",
+  "hook": "First 3 seconds - emotional grab",
+  "voiceover": "Full 100-130 word script (hook + body + landing)",
+  "voice_direction": "e.g. calm and low, or yelling with energy, etc.",
+  "caption": "Short caption for post",
+  "hashtags": ["#motivation", "#mindset", ...],
+  "keywords": ["key", "visual", "words"],
+  "category": "self_worth|future_self|action|rest|growth"
+}}"""
     elif content_type == "health":
         prompt = (
-            "Generate an informative health/nutrition fact for a short social media video. "
-            "Focus on a specific food, nutrient, or health benefit that's surprising but true.\n\n"
-            "Format:\n"
-            "- Hook: A surprising claim that makes viewers stay (desire/curiosity type)\n"
-            "- Benefits: 3-4 short bullet points about the topic\n"
-            "- Each benefit should mention a specific food/nutrient\n"
-            "- CTA: Follow for more health tips\n\n"
+            "Generate an informative health/nutrition fact for a 65-second social media video.\n\n"
+            "Requirements:\n"
+            "- Hook: A surprising claim that makes viewers stay\n"
+            "- Benefits: 5-6 bullet points about the topic (more detail than usual)\n"
+            "- Each benefit should be a complete sentence\n"
+            "- Voiceover: Complete script (~160 words)\n\n"
             "Respond in JSON:\n"
             "{\n"
             "  \"hook\": \"This one fruit can lower your blood pressure by 20%\",\n"
             "  \"topic\": \"Bananas and blood pressure\",\n"
             "  \"benefits\": [\n"
-            "    \"Bananas are rich in potassium\",\n"
-            "    \"Potassium helps regulate blood pressure\",\n"
-            "    \"One banana provides 9% of daily potassium\",\n"
-            "    \"Studies show regular intake reduces stroke risk\"\n"
+            "    \"Bananas are rich in potassium, an essential mineral.\",\n"
+            "    \"Potassium helps regulate blood pressure naturally.\",\n"
+            "    \"One banana provides 9% of your daily potassium needs.\",\n"
+            "    \"Studies show regular intake can reduce stroke risk by 27%.\",\n"
+            "    \"The fiber in bananas also supports heart health.\",\n"
+            "    \"Eating one banana daily is an easy health habit.\"\n"
             "  ],\n"
+            "  \"voiceover\": \"Full 160-word script combining hook, benefits, and CTA...\",\n"
             "  \"keywords\": [\"banana\", \"potassium\", \"blood pressure\", \"heart\"],\n"
             "  \"visual_cues\": [\"banana\", \"heart\", \"blood pressure monitor\"],\n"
             "  \"caption\": \"...\",\n"
@@ -132,14 +172,21 @@ def _generate_via_api(content_type):
         )
     else:
         prompt = (
-            "Generate a surprising, true fun fact for a 'Did You Know?' social media video. "
-            "Respond in JSON: {\"fact\": \"...\", \"source\": \"...\", \"caption\": \"...\", "
+            "Generate a surprising, true fun fact for a 65-second 'Did You Know?' video.\n\n"
+            "Requirements:\n"
+            "- Hook: Attention-grabbing opening question or statement\n"
+            "- Fact: The main surprising fact\n"
+            "- Expansion: 3-4 sentences with more detail, context, or related facts\n"
+            "- Voiceover: Complete script (~160 words) combining all elements\n\n"
+            "Respond in JSON:\n"
+            "{\"fact\": \"...\", \"hook\": \"...\", \"voiceover\": \"Full 160-word script...\", "
+            "\"source\": \"...\", \"caption\": \"...\", \"keywords\": [\"key\", \"words\"], "
             "\"hashtags\": [\"#...\"], \"category\": \"science|history|nature|space\"}"
         )
 
     message = client.messages.create(
         model="claude-sonnet-4-5-20250929",
-        max_tokens=500,
+        max_tokens=1000,  # Increased for longer ~160 word scripts
         messages=[{"role": "user", "content": prompt}],
     )
 

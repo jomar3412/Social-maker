@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block title %}Content Engine - Shot List{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-2xl font-semibold tracking-tight">Shot List</h1>
+            <p class="text-gray-500 text-sm mt-1">{{ display_title or run_id }}</p>
+        </div>
+        <a href="/runs/{{ run_id }}" class="text-blue-400 hover:text-blue-300 text-sm">
+            &larr; Back to Overview
+        </a>
+    </div>
+
+    <!-- Tabs -->
+    <div class="flex gap-1 mb-6 border-b border-white/10">
+        <button onclick="showTab('formatted')"
+                id="tab-formatted"
+                class="tab-btn px-4 py-2 text-sm font-medium border-b-2 border-blue-500 text-blue-400">
+            Formatted
+        </button>
+        <button onclick="showTab('json')"
+                id="tab-json"
+                class="tab-btn px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-400 hover:text-gray-300">
+            JSON
+        </button>
+        <button onclick="showTab('markdown')"
+                id="tab-markdown"
+                class="tab-btn px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-400 hover:text-gray-300">
+            Markdown
+        </button>
+    </div>
+
+    <!-- Formatted View -->
+    <div id="panel-formatted" class="tab-panel">
+        {% if shots %}
+        <div class="space-y-4">
+            {% for shot in shots %}
+            <div class="glass-card rounded-xl p-5">
+                <div class="flex items-start justify-between mb-3">
+                    <div>
+                        <span class="text-xs font-medium px-2 py-1 rounded
+                                     {% if shot.beat_type == 'HOOK' %}bg-red-500/20 text-red-300
+                                     {% elif shot.beat_type == 'TENSION' %}bg-orange-500/20 text-orange-300
+                                     {% elif shot.beat_type == 'SHIFT' %}bg-yellow-500/20 text-yellow-300
+                                     {% elif shot.beat_type == 'CLIMB' %}bg-green-500/20 text-green-300
+                                     {% elif shot.beat_type == 'RESOLUTION' %}bg-blue-500/20 text-blue-300
+                                     {% elif shot.beat_type == 'CTA' %}bg-purple-500/20 text-purple-300
+                                     {% else %}bg-gray-500/20 text-gray-300{% endif %}">
+                            {{ shot.beat_type }}
+                        </span>
+                        <span class="text-xs text-gray-500 ml-2">Scene {{ shot.scene_number }}</span>
+                    </div>
+                    <span class="text-xs text-gray-500">{{ shot.duration }}s</span>
+                </div>
+
+                <!-- Voiceover -->
+                <div class="mb-3">
+                    <label class="text-xs text-gray-500 block mb-1">Voiceover</label>
+                    <p class="text-gray-200 text-sm">{{ shot.voiceover_segment }}</p>
+                </div>
+
+                <!-- Visual -->
+                <div class="mb-3">
+                    <label class="text-xs text-gray-500 block mb-1">Visual</label>
+                    <p class="text-gray-400 text-sm">{{ shot.visual_description }}</p>
+                </div>
+
+                <!-- Overlay -->
+                {% if shot.overlay_text %}
+                <div class="mb-3">
+                    <label class="text-xs text-gray-500 block mb-1">Overlay</label>
+                    <span class="text-blue-300 text-sm">"{{ shot.overlay_text }}"</span>
+                    {% if shot.overlay_position %}
+                    <span class="text-xs text-gray-500 ml-2">({{ shot.overlay_position }})</span>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <!-- Match Score -->
+                {% if shot.match_score %}
+                <div class="flex items-center gap-2 mt-3 pt-3 border-t border-white/5">
+                    <span class="text-xs text-gray-500">Match:</span>
+                    <div class="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                        <div class="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"
+                             style="width: {{ (shot.match_score * 100)|int }}%"></div>
+                    </div>
+                    <span class="text-xs text-gray-400">{{ "%.2f"|format(shot.match_score) }}</span>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="glass-card rounded-xl p-8 text-center">
+            <p class="text-gray-500">No shot list available</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- JSON View -->
+    <div id="panel-json" class="tab-panel hidden">
+        <div class="glass-card rounded-xl p-4">
+            <div class="flex justify-end mb-2">
+                <button onclick="copyJson(this)"
+                        class="text-xs text-blue-400 hover:text-blue-300">
+                    Copy JSON
+                </button>
+            </div>
+            <pre id="json-content" class="code-block rounded-lg p-4 text-xs text-gray-300 overflow-x-auto max-h-[600px] overflow-y-auto">{{ shot_list_json }}</pre>
+        </div>
+    </div>
+
+    <!-- Markdown View -->
+    <div id="panel-markdown" class="tab-panel hidden">
+        <div class="glass-card rounded-xl p-4">
+            <div class="flex justify-end mb-2">
+                <button onclick="copyMarkdown(this)"
+                        class="text-xs text-blue-400 hover:text-blue-300">
+                    Copy Markdown
+                </button>
+            </div>
+            <pre id="markdown-content" class="code-block rounded-lg p-4 text-xs text-gray-300 overflow-x-auto max-h-[600px] overflow-y-auto whitespace-pre-wrap">{{ shot_list_md }}</pre>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showTab(tabName) {
+        // Hide all panels
+        document.querySelectorAll('.tab-panel').forEach(panel => {
+            panel.classList.add('hidden');
+        });
+
+        // Reset all tab buttons
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('border-blue-500', 'text-blue-400');
+            btn.classList.add('border-transparent', 'text-gray-400');
+        });
+
+        // Show selected panel
+        document.getElementById('panel-' + tabName).classList.remove('hidden');
+
+        // Highlight selected tab
+        const selectedTab = document.getElementById('tab-' + tabName);
+        selectedTab.classList.remove('border-transparent', 'text-gray-400');
+        selectedTab.classList.add('border-blue-500', 'text-blue-400');
+    }
+
+    function copyWithFeedback(content, btn, originalText) {
+        navigator.clipboard.writeText(content).then(() => {
+            // Success feedback
+            btn.textContent = 'Copied!';
+            btn.classList.remove('text-blue-400', 'hover:text-blue-300');
+            btn.classList.add('text-green-400');
+
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.classList.remove('text-green-400');
+                btn.classList.add('text-blue-400', 'hover:text-blue-300');
+            }, 1500);
+        }).catch(err => {
+            console.error('Clipboard failed:', err);
+
+            // Fallback
+            const textarea = document.createElement('textarea');
+            textarea.value = content;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+
+            try {
+                document.execCommand('copy');
+                btn.textContent = 'Copied!';
+                btn.classList.add('text-green-400');
+            } catch (e) {
+                btn.textContent = 'Failed';
+                btn.classList.add('text-red-400');
+            }
+            document.body.removeChild(textarea);
+
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.classList.remove('text-green-400', 'text-red-400');
+                btn.classList.add('text-blue-400');
+            }, 1500);
+        });
+    }
+
+    function copyJson(btn) {
+        const content = document.getElementById('json-content').textContent;
+        copyWithFeedback(content, btn, 'Copy JSON');
+    }
+
+    function copyMarkdown(btn) {
+        const content = document.getElementById('markdown-content').textContent;
+        copyWithFeedback(content, btn, 'Copy Markdown');
+    }
+</script>
+{% endblock %}

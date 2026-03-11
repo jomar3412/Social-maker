@@ -1,0 +1,85 @@
+{
+  "name": "fun_facts",
+  "display_name": "Fun Facts / Did You Know?",
+  "description": "Engaging educational content about surprising facts",
+  "tags": ["education", "facts", "science", "discovery"],
+  "voice": {
+    "tone": "friendly-authoritative",
+    "personality": "curious science teacher who's excited to share discoveries",
+    "reading_level": "8th grade",
+    "energy": "medium-high"
+  },
+  "hooks": {
+    "templates": [
+      "Did you know that {fact}?",
+      "Scientists still can't explain why {mystery}.",
+      "This is the only {thing} in the world that {does_what}.",
+      "You've been lied to about {topic}.",
+      "The real reason {thing} {does_what}...",
+      "99% of people don't know this about {topic}."
+    ],
+    "types": {
+      "curiosity": "Make them need to know the answer",
+      "controversy": "Challenge common beliefs",
+      "revelation": "Promise secret knowledge",
+      "impossibility": "Present something that seems impossible"
+    },
+    "avoid": [
+      "clickbait that doesn't deliver",
+      "obvious facts everyone knows",
+      "overly long setups",
+      "passive voice in hooks"
+    ]
+  },
+  "vocabulary": {
+    "power_words": [
+      "actually", "secret", "discovered", "proven", "scientists",
+      "ancient", "mystery", "impossible", "shocking", "revealed",
+      "hidden", "truth", "never", "only", "first", "last"
+    ],
+    "forbidden": [
+      "literally", "basically", "like", "um", "uh", "you know",
+      "so yeah", "anyway", "kind of", "sort of", "pretty much"
+    ]
+  },
+  "structure": {
+    "max_sentence_words": 10,
+    "target_duration": 45,
+    "min_duration": 30,
+    "max_duration": 59
+  },
+  "content_rules": {
+    "must_be_true": true,
+    "cite_sources": true,
+    "avoid_debunked": true,
+    "prefer_visual": true,
+    "categories": [
+      "science", "history", "nature", "space", "human_body",
+      "animals", "technology", "geography", "psychology", "food"
+    ]
+  },
+  "visual_style": {
+    "text_on_screen": {
+      "keywords": true,
+      "numbers": true,
+      "comparisons": true
+    },
+    "stock_footage": [
+      "nature close-ups", "space imagery", "historical photos",
+      "animal footage", "science visualizations"
+    ],
+    "effects": [
+      "zoom on key words", "shake on reveal", "glow on numbers"
+    ]
+  },
+  "hashtags": {
+    "primary": ["#didyouknow", "#facts", "#mindblown", "#science"],
+    "secondary": ["#learning", "#education", "#interesting", "#viral"]
+  },
+  "cta_templates": [
+    "Follow for more mind-blowing facts.",
+    "Which fact should I cover next?",
+    "Comment if you knew this already.",
+    "Save this for later."
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "name": "deep_motivational",
+  "display_name": "Deep Motivational",
+  "description": "Deep, resonant voice with gravitas for inspirational content",
+  "tags": ["deep", "male", "motivational", "powerful"],
+  "elevenlabs": {
+    "voice_id": "pNInz6obpgDQGcFmaJgB",
+    "model_id": "eleven_monolingual_v1",
+    "stability": 0.5,
+    "similarity_boost": 0.75,
+    "style": 0.3,
+    "use_speaker_boost": true
+  },
+  "characteristics": {
+    "gender": "male",
+    "age": "mature",
+    "tone": "authoritative yet warm",
+    "pace": "measured, deliberate",
+    "emphasis": "key words, pauses for impact"
+  },
+  "best_for": ["affirming", "future_accountability", "calm_minimal"],
+  "avoid_for": ["edgy_funny"]
+}

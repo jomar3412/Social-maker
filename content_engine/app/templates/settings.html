@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+
+{% block title %}Content Engine - Settings{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <h1 class="text-2xl font-semibold mb-6 tracking-tight">Settings</h1>
+
+    <!-- Storage Management -->
+    <div class="glass-card rounded-2xl p-6 mb-6">
+        <h2 class="text-lg font-medium text-white mb-4 flex items-center gap-2">
+            <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+            </svg>
+            Storage Management
+        </h2>
+
+        <!-- Storage Usage Indicator -->
+        <div id="storage-stats"
+             hx-get="/api/storage/stats"
+             hx-trigger="load, every 30s"
+             hx-swap="innerHTML"
+             class="mb-6">
+            <div class="animate-pulse">
+                <div class="h-4 bg-gray-700 rounded w-1/3 mb-2"></div>
+                <div class="h-2 bg-gray-700 rounded"></div>
+            </div>
+        </div>
+
+        <!-- Storage Config Form -->
+        <form id="storage-config-form"
+              hx-put="/api/storage/config"
+              hx-swap="none"
+              hx-indicator="#storage-saving"
+              class="space-y-4">
+
+            <!-- Max Storage -->
+            <div>
+                <label class="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wider">Max Storage (GB)</label>
+                <input type="number"
+                       name="max_storage_gb"
+                       value="{{ config.max_storage_gb }}"
+                       step="1"
+                       min="0"
+                       class="input-glass w-full rounded-lg px-4 py-3 text-gray-100">
+                <p class="text-xs text-gray-500 mt-1">Set to 0 for unlimited</p>
+            </div>
+
+            <!-- Cleanup Thresholds -->
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wider">Cleanup Threshold (%)</label>
+                    <input type="number"
+                           name="cleanup_threshold_pct"
+                           value="{{ config.cleanup_threshold_pct }}"
+                           step="5"
+                           min="50"
+                           max="100"
+                           class="input-glass w-full rounded-lg px-4 py-3 text-gray-100">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wider">Target After Cleanup (%)</label>
+                    <input type="number"
+                           name="cleanup_target_pct"
+                           value="{{ config.cleanup_target_pct }}"
+                           step="5"
+                           min="30"
+                           max="90"
+                           class="input-glass w-full rounded-lg px-4 py-3 text-gray-100">
+                </div>
+            </div>
+
+            <!-- Deletion Policy -->
+            <div>
+                <label class="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wider">Deletion Policy</label>
+                <select name="deletion_policy" class="input-glass w-full rounded-lg px-4 py-3 text-gray-100">
+                    <option value="assets_only" {% if config.deletion_policy == 'assets_only' %}selected{% endif %}>
+                        Keep Metadata (delete heavy assets only)
+                    </option>
+                    <option value="full" {% if config.deletion_policy == 'full' %}selected{% endif %}>
+                        Full Delete (remove entire run directory)
+                    </option>
+                </select>
+            </div>
+
+            <!-- Toggle Options -->
+            <div class="space-y-3 pt-4 border-t border-gray-700/50">
+                <h3 class="text-sm font-medium text-gray-300">Automatic Cleanup Options</h3>
+
+                <!-- Delete Rejected Images -->
+                <div class="flex items-center justify-between p-3 glass-card rounded-lg">
+                    <div>
+                        <label class="text-sm text-gray-200">Delete Rejected Images</label>
+                        <p class="text-xs text-gray-500">Auto-delete rejected image iterations</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox"
+                               name="delete_rejected_images"
+                               value="true"
+                               {% if config.delete_rejected_images %}checked{% endif %}
+                               class="sr-only peer">
+                        <div class="w-11 h-6 bg-gray-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+                    </label>
+                </div>
+
+                <!-- Delete Intermediate Videos -->
+                <div class="flex items-center justify-between p-3 glass-card rounded-lg">
+                    <div>
+                        <label class="text-sm text-gray-200">Delete Intermediate Videos</label>
+                        <p class="text-xs text-gray-500">Auto-delete temp/draft videos after publish</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox"
+                               name="delete_intermediate_videos"
+                               value="true"
+                               {% if config.delete_intermediate_videos %}checked{% endif %}
+                               class="sr-only peer">
+                        <div class="w-11 h-6 bg-gray-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Save Button -->
+            <button type="submit"
+                    class="btn-primary w-full text-white py-3 rounded-xl font-medium flex items-center justify-center gap-2">
+                <span id="storage-saving" class="htmx-indicator">
+                    <div class="spinner"></div>
+                </span>
+                Save Storage Settings
+            </button>
+        </form>
+
+        <!-- Manual Cleanup Actions -->
+        <div class="mt-6 pt-6 border-t border-gray-700/50 space-y-3">
+            <h3 class="text-sm font-medium text-gray-300">Manual Cleanup</h3>
+
+            <div class="grid grid-cols-2 gap-3">
+                <button hx-post="/api/storage/cleanup"
+                        hx-swap="innerHTML"
+                        hx-target="#cleanup-result"
+                        class="btn-secondary text-gray-300 py-2.5 rounded-lg text-sm">
+                    Run Auto-Cleanup
+                </button>
+
+                <button hx-post="/api/storage/cleanup-rejected-images"
+                        hx-swap="innerHTML"
+                        hx-target="#cleanup-result"
+                        class="btn-secondary text-gray-300 py-2.5 rounded-lg text-sm">
+                    Clean Rejected Images
+                </button>
+            </div>
+
+            <button hx-post="/api/storage/cleanup-intermediate-videos"
+                    hx-swap="innerHTML"
+                    hx-target="#cleanup-result"
+                    class="btn-secondary w-full text-gray-300 py-2.5 rounded-lg text-sm">
+                Clean Intermediate Videos
+            </button>
+
+            <div id="cleanup-result" class="mt-3"></div>
+        </div>
+    </div>
+
+    <!-- Drive Status -->
+    <div class="glass-card rounded-2xl p-6 mb-6">
+        <h2 class="text-lg font-medium text-white mb-4 flex items-center gap-2">
+            <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+            </svg>
+            G Drive Status
+        </h2>
+
+        <div id="drive-status"
+             hx-get="/api/drive/status"
+             hx-trigger="load"
+             hx-swap="innerHTML">
+            <div class="animate-pulse">
+                <div class="h-12 bg-gray-700 rounded"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Info -->
+    <div class="glass-card rounded-2xl p-6">
+        <h2 class="text-lg font-medium text-white mb-4 flex items-center gap-2">
+            <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            System Information
+        </h2>
+
+        <div class="space-y-2 text-sm">
+            <div class="flex justify-between">
+                <span class="text-gray-400">Storage Root</span>
+                <span class="text-gray-200 font-mono text-xs">/home/markhuerta/gdrive_mount/content_engine</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-gray-400">Version</span>
+                <span class="text-gray-200">1.0.0</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Handle form submission feedback
+    document.getElementById('storage-config-form').addEventListener('htmx:afterRequest', function(evt) {
+        if (evt.detail.successful) {
+            // Show success toast
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-4 right-4 bg-green-500/90 text-white px-4 py-2 rounded-lg text-sm';
+            toast.textContent = 'Settings saved';
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+
+            // Refresh storage stats
+            htmx.trigger('#storage-stats', 'load');
+        }
+    });
+</script>
+{% endblock %}

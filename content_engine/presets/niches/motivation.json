@@ -1,0 +1,82 @@
+{
+  "name": "motivation",
+  "display_name": "Daily Motivation / Mindset",
+  "description": "Supportive, direct motivational content for personal growth",
+  "tags": ["motivation", "mindset", "self-improvement", "daily"],
+  "voice": {
+    "tone": "direct-personal",
+    "personality": "supportive friend who tells it like it is",
+    "reading_level": "conversational",
+    "energy": "varies by style"
+  },
+  "hooks": {
+    "types": {
+      "validation": "Acknowledge their unseen struggles",
+      "future_self": "Connect today's choices to future outcomes",
+      "direct_address": "Speak TO them, not AT them",
+      "wake_up_call": "Urgent energy, demand action"
+    },
+    "avoid": [
+      "historical figures as hooks",
+      "slavery or trauma as attention-grabbers",
+      "quotes from famous people as openers",
+      "lecturing or preaching tone",
+      "generic 'rise and grind' cliches",
+      "anything that sounds like a LinkedIn post"
+    ]
+  },
+  "vocabulary": {
+    "power_words": [
+      "you", "today", "tomorrow", "decision", "enough",
+      "proud", "survived", "stronger", "capable", "worthy",
+      "forward", "progress", "matter", "real", "truth"
+    ],
+    "forbidden": [
+      "grindset", "hustle culture", "sigma", "alpha",
+      "manifest", "universe", "vibrations", "energy",
+      "boss babe", "entrepreneur mindset", "10x"
+    ]
+  },
+  "structure": {
+    "max_sentence_words": 15,
+    "target_duration": 45,
+    "min_duration": 20,
+    "max_duration": 90
+  },
+  "content_rules": {
+    "must_feel_personal": true,
+    "use_second_person": true,
+    "acknowledge_struggle": true,
+    "no_toxic_positivity": true,
+    "topics_to_avoid": [
+      "slavery", "holocaust", "abuse", "suicide",
+      "specific tragedies", "political figures"
+    ],
+    "allowed_themes": [
+      "self-worth", "progress", "future self", "rest",
+      "decisions", "action", "resilience", "growth",
+      "morning energy", "daily reminder", "you're enough"
+    ]
+  },
+  "visual_style": {
+    "footage_types": [
+      "cinematic nature", "sunrise/sunset", "person walking alone",
+      "city time-lapse", "ocean waves", "mountains",
+      "rain on window", "coffee brewing", "morning routines"
+    ],
+    "avoid_footage": [
+      "stock business people", "pointing at camera",
+      "cheesy thumbs up", "overly polished influencer shots"
+    ]
+  },
+  "hashtags": {
+    "primary": ["#motivation", "#mindset", "#dailyreminder", "#selflove"],
+    "secondary": ["#growthmindset", "#youvegotthis", "#mentalhealthmatters", "#positivity"]
+  },
+  "cta_templates": [
+    "You needed to hear this today.",
+    "Save this for when you need it.",
+    "Tag someone who needs this.",
+    "Follow for daily reminders."
+  ]
+}

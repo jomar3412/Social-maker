@@ -1,0 +1,23 @@
+{
+  "name": "calm_reflective",
+  "display_name": "Calm & Reflective",
+  "description": "Soft, soothing voice for peaceful, meditative content",
+  "tags": ["calm", "soft", "meditative", "peaceful"],
+  "elevenlabs": {
+    "voice_id": "EXAVITQu4vr4xnSDxMaL",
+    "model_id": "eleven_monolingual_v1",
+    "stability": 0.7,
+    "similarity_boost": 0.6,
+    "style": 0.2,
+    "use_speaker_boost": false
+  },
+  "characteristics": {
+    "gender": "neutral",
+    "age": "adult",
+    "tone": "soothing, gentle",
+    "pace": "slow, deliberate",
+    "emphasis": "minimal, natural flow"
+  },
+  "best_for": ["calm_minimal", "affirming"],
+  "avoid_for": ["aggressive_energy", "edgy_funny"]
+}

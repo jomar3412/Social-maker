@@ -1,0 +1,35 @@
+{
+  "name": "stock_only",
+  "display_name": "Stock Footage Only",
+  "description": "Use only stock footage from Envato/Pexels",
+  "tags": ["stock", "footage", "envato", "pexels"],
+  "mode": "stock",
+  "sources": [
+    {
+      "name": "envato",
+      "priority": 1,
+      "subscription": true
+    },
+    {
+      "name": "pexels",
+      "priority": 2,
+      "subscription": false
+    },
+    {
+      "name": "pixabay",
+      "priority": 3,
+      "subscription": false
+    }
+  ],
+  "search": {
+    "prefer_vertical": true,
+    "min_resolution": "1080p",
+    "max_duration": 30,
+    "license": "commercial"
+  },
+  "query_strategy": {
+    "tight": "Exact match for scene description",
+    "broad": "Category/mood based fallback",
+    "negative": "Exclude unwanted elements"
+  }
+}

@@ -473,17 +473,18 @@ class PipelineOrchestrator:
                 if not stock_result.success:
                     self._log(f"Stock queries warning: {stock_result.error_message}", level="WARN")
 
-            # Mark complete
+            # Write clip_prompts_ready.txt and pause for video clips
+            self._write_clip_prompts_file(output_dir)
             self._update_stage(
                 run_id,
-                RunStage.COMPLETE,
-                current_stage_name="Complete",
-                progress_percent=100,
+                RunStage.AWAITING_VIDEO_CLIPS,
+                current_stage_name="Awaiting Video Clips",
+                progress_percent=95,
             )
-            self._log("Post-approval generation complete")
-            self._progress("Complete", 100)
+            self._log("Pipeline paused: awaiting video clips")
+            self._progress("Awaiting Video Clips", 95)
 
-            return True, "Generation complete"
+            return True, "awaiting_video_clips"
 
         except Exception as e:
             self._log(f"Post-approval error: {e}", level="ERROR")
@@ -493,6 +494,46 @@ class PipelineOrchestrator:
                 error_message=str(e),
             )
             return False, str(e)
+
+    def _write_clip_prompts_file(self, output_dir: Path) -> None:
+        """
+        Write clip_prompts_ready.txt with all NanoBanana prompts formatted
+        for easy copy-paste into a video generation tool (Veo, Runway, etc.).
+        """
+        nano_path = output_dir / "nanobanana_prompts.txt"
+        out_path = output_dir / "clip_prompts_ready.txt"
+
+        lines = [
+            "=" * 60,
+            "CLIP PROMPTS READY FOR VIDEO GENERATION",
+            "=" * 60,
+            f"Generated: {datetime.now().isoformat()}",
+            f"Run: {output_dir.name}",
+            "",
+        ]
+
+        if nano_path.exists():
+            for line in nano_path.read_text().strip().splitlines():
+                if not line.strip():
+                    continue
+                if line.startswith("Scene ") and ": " in line:
+                    label, _, prompt = line.partition(": ")
+                    lines.append("─" * 60)
+                    lines.append(label.upper())
+                    lines.append("─" * 60)
+                    lines.append(prompt)
+                    lines.append("")
+                else:
+                    lines.append(line)
+        else:
+            lines.append("[WARNING] nanobanana_prompts.txt not found — re-run visual prompt generation")
+
+        lines.append("=" * 60)
+        lines.append("END OF CLIP PROMPTS")
+        lines.append("=" * 60)
+
+        out_path.write_text("\n".join(lines))
+        self._log(f"clip_prompts_ready.txt written ({len(lines)} lines)")
 
     def _run_script_stages(
         self,
@@ -675,14 +716,16 @@ class PipelineOrchestrator:
         output_path: str | None = None,
         error_message: str | None = None,
         approvals_pending: list[str] | None = None,
+        current_stage_name: str | None = None,
+        progress_percent: int | None = None,
     ):
         """Update stage in RunStore and log."""
         self._log(f"Stage transition: -> {stage.value}")
 
         # Get stage info for progress
         stage_info = STAGE_INFO.get(stage.value, {})
-        progress = stage_info.get("progress", 0)
-        stage_name = stage_info.get("name", stage.value)
+        progress = progress_percent if progress_percent is not None else stage_info.get("progress", 0)
+        stage_name = current_stage_name or stage_info.get("name", stage.value)
 
         self.run_store.update_stage(
             run_id,

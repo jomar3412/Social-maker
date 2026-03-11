@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Content Engine - Library{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-semibold tracking-tight">Library</h1>
+        <a href="/wizard" class="btn-primary text-white px-4 py-2 rounded-lg text-sm font-medium">
+            + New Run
+        </a>
+    </div>
+
+    <!-- Filters -->
+    <div class="flex gap-2 mb-6 flex-wrap">
+        <a href="/library"
+           class="px-4 py-2 rounded-lg text-sm font-medium transition-colors
+                  {% if not filter %}bg-blue-500/20 text-blue-300 border border-blue-500/30{% else %}bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10{% endif %}">
+            All
+        </a>
+        <a href="/library?filter=pending"
+           class="px-4 py-2 rounded-lg text-sm font-medium transition-colors
+                  {% if filter == 'pending' %}bg-yellow-500/20 text-yellow-300 border border-yellow-500/30{% else %}bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10{% endif %}">
+            Pending
+        </a>
+        <a href="/library?filter=approved"
+           class="px-4 py-2 rounded-lg text-sm font-medium transition-colors
+                  {% if filter == 'approved' %}bg-green-500/20 text-green-300 border border-green-500/30{% else %}bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10{% endif %}">
+            Approved
+        </a>
+        <a href="/library?filter=reviewed"
+           class="px-4 py-2 rounded-lg text-sm font-medium transition-colors
+                  {% if filter == 'reviewed' %}bg-purple-500/20 text-purple-300 border border-purple-500/30{% else %}bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10{% endif %}">
+            Reviewed
+        </a>
+    </div>
+
+    <!-- Runs List -->
+    {% if runs %}
+    <div class="space-y-2">
+        {% for run in runs %}
+        <div class="bg-white/[0.02] border border-white/5 rounded-xl p-4 hover:bg-white/[0.04] transition-colors">
+            <div class="flex items-start justify-between">
+                <div class="flex-1">
+                    <a href="{% if run.stage.value == 'awaiting_script_approval' %}/wizard/approve/{{ run.run_id }}{% else %}/runs/{{ run.run_id }}{% endif %}"
+                       class="text-gray-200 font-medium hover:text-blue-300 transition-colors">
+                        {{ run.display_title or run.run_id }}
+                    </a>
+                    <div class="text-xs text-gray-500 mt-1">
+                        <span class="font-mono text-gray-600">{{ run.run_id }}</span>
+                        <span class="text-gray-700 mx-1">&bull;</span>
+                        {{ run.config.niche }} / {{ run.config.style }}
+                        <span class="text-gray-700 mx-1">&bull;</span>
+                        {{ run.created_at[:10] }}
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2 ml-4">
+                    <!-- Quick Actions -->
+                    {% if run.stage.value == 'awaiting_script_approval' %}
+                    <a href="/wizard/approve/{{ run.run_id }}"
+                       class="text-blue-400 hover:text-blue-300 text-xs">
+                        Review
+                    </a>
+                    {% elif run.stage.value in ['script_approved', 'complete'] %}
+                    <a href="/wizard/feedback/{{ run.run_id }}"
+                       class="text-purple-400 hover:text-purple-300 text-xs">
+                        Feedback
+                    </a>
+                    {% endif %}
+
+                    <!-- Status Badge -->
+                    {% if run.stage.value == 'awaiting_script_approval' %}
+                    <span class="badge-pending px-2 py-1 rounded text-xs">pending</span>
+                    {% elif run.stage.value == 'script_approved' %}
+                    <span class="badge-success px-2 py-1 rounded text-xs">approved</span>
+                    {% elif run.stage.value == 'complete' %}
+                    <span class="badge-success px-2 py-1 rounded text-xs">complete</span>
+                    {% elif run.stage.value == 'failed' %}
+                    <span class="badge-error px-2 py-1 rounded text-xs">failed</span>
+                    {% else %}
+                    <span class="text-gray-500 text-xs">{{ run.stage.value }}</span>
+                    {% endif %}
+
+                    <!-- Has Feedback Indicator -->
+                    {% if run.run_id in reviewed_run_ids %}
+                    <span class="w-2 h-2 rounded-full bg-purple-400" title="Has feedback"></span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="glass-card rounded-2xl p-10 text-center">
+        <svg class="w-12 h-12 text-gray-700 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                  d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+        </svg>
+        <p class="text-gray-500 mb-5">No runs found</p>
+        <a href="/wizard" class="btn-primary inline-block text-white px-6 py-2.5 rounded-lg text-sm">
+            Start First Run
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

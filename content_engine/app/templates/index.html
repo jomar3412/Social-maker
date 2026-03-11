@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Content Engine{% endblock %}
+
+{% block content %}
+<div class="text-center py-16">
+    <h1 class="text-5xl font-bold mb-4 tracking-tight">
+        <span class="text-white">Content</span><span class="text-blue-400">Engine</span>
+    </h1>
+    <p class="text-gray-400 mb-10 max-w-md mx-auto leading-relaxed">
+        Automated short-form video content generation with AI-powered scripts and approval workflows.
+    </p>
+
+    <div class="flex gap-4 justify-center">
+        <a href="/wizard"
+           class="btn-primary text-white px-8 py-3 rounded-lg font-medium">
+            Start New Content
+        </a>
+        <a href="/wizard/pending"
+           class="btn-secondary text-gray-300 px-8 py-3 rounded-lg font-medium">
+            View Pending
+        </a>
+    </div>
+</div>
+{% endblock %}
