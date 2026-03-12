@@ -349,26 +349,23 @@ def create_app() -> FastAPI:
 
         # Check for existing voice files
         voice_exists = False
+        stub_exists = False
         voice_path = None
         duration_seconds = 0
         scene_timestamps = []
 
         if record.output_path:
             output_dir = Path(record.output_path)
-            voice_files = list(output_dir.glob("voiceover_v*.mp3"))
-            stub_files = list(output_dir.glob("voiceover_v*_stub.json"))
+            voice_files = sorted(output_dir.glob("voiceover_v*.mp3"))
+            stub_files = sorted(output_dir.glob("voiceover_v*_stub.json"))
 
             if voice_files:
                 voice_exists = True
-                voice_path = str(sorted(voice_files)[-1])
-            elif stub_files:
-                voice_exists = True
-                voice_path = str(sorted(stub_files)[-1])
+                voice_path = str(voice_files[-1])
 
-            # Load timestamps from stub file
             if stub_files:
-                latest_stub = sorted(stub_files)[-1]
-                stub_data = json.loads(latest_stub.read_text())
+                stub_exists = True
+                stub_data = json.loads(stub_files[-1].read_text())
                 scene_timestamps = stub_data.get("scene_timestamps", [])
                 duration_seconds = stub_data.get("estimated_duration", 0)
 
@@ -392,6 +389,7 @@ def create_app() -> FastAPI:
                 "word_count": word_count,
                 "duration_estimate": int(duration_estimate),
                 "voice_exists": voice_exists,
+                "stub_exists": stub_exists,
                 "voice_path": voice_path,
                 "duration_seconds": duration_seconds,
                 "scene_timestamps": scene_timestamps,
@@ -548,6 +546,20 @@ def create_app() -> FastAPI:
         # Check if shot list exists (for sync button)
         has_shot_list = bool(shots)
 
+        # Load voice timestamps from stub file
+        scene_timestamps_map = {}
+        has_voice = False
+        if record.output_path:
+            output_dir = Path(record.output_path)
+            stub_files = sorted(output_dir.glob("voiceover_v*_stub.json"))
+            if stub_files:
+                import json as _json
+                stub_data = _json.loads(stub_files[-1].read_text())
+                for ts in stub_data.get("scene_timestamps", []):
+                    sn = ts.get("scene_number", 0)
+                    scene_timestamps_map[sn] = ts
+            has_voice = bool(list(output_dir.glob("voiceover_v*.mp3")))
+
         # Check if run is still generating (for auto-refresh)
         is_generating = record.stage in [
             RunStage.SCRIPT_APPROVED,
@@ -578,6 +590,8 @@ def create_app() -> FastAPI:
                 "run_stage": record.stage.value,
                 "is_generating": is_generating,
                 "full_script": full_script,
+                "scene_timestamps_map": scene_timestamps_map,
+                "has_voice": has_voice,
             },
         )
 
