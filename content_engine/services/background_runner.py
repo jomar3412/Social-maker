@@ -252,7 +252,7 @@ def continue_after_approval(run_id: str) -> None:
     - Visual prompts (nanobanana_prompts.txt)
     - Stock queries (stock_queries.txt)
 
-    Then marks as COMPLETE.
+    Then writes clip_prompts_ready.txt and pauses at AWAITING_VIDEO_CLIPS.
 
     Args:
         run_id: Run identifier
@@ -359,15 +359,18 @@ def continue_after_approval(run_id: str) -> None:
         _store_prompt_versions(run_id, shot_list, visual_mode, store)
         _write_log(output_path, f"Stored {len(shot_list)} scene prompts")
 
-        # Mark as complete
+        # Write clip_prompts_ready.txt and pause for video clip submission
+        orchestrator._write_clip_prompts_file(Path(output_path))
+        _write_log(output_path, "Wrote clip_prompts_ready.txt")
+
         store.update_stage(
             run_id,
-            RunStage.COMPLETE,
-            current_stage_name="Complete",
-            progress_percent=100,
+            RunStage.AWAITING_VIDEO_CLIPS,
+            current_stage_name="Awaiting Video Clips",
+            progress_percent=95,
         )
-        _write_log(output_path, "Pipeline complete - all artifacts generated")
-        logger.info(f"[{run_id}] Post-approval continuation complete")
+        _write_log(output_path, "Pipeline paused: awaiting video clips")
+        logger.info(f"[{run_id}] Post-approval continuation complete — awaiting video clips")
 
     except Exception as e:
         # Log full traceback
