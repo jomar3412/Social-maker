@@ -43,11 +43,33 @@
     </div>
 
     <!-- Stage Pipeline -->
+    {# URL for the current (blue) step — mirrors CTA logic #}
+    {% if stage == 'awaiting_script_approval' %}
+        {% set current_url = '/wizard/approve/' ~ run_id %}
+    {% elif stage == 'awaiting_video_clips' and not has_voice %}
+        {% set current_url = '/runs/' ~ run_id ~ '/voice' %}
+    {% elif stage == 'awaiting_video_clips' and has_voice %}
+        {% set current_url = '/runs/' ~ run_id ~ '/artifacts' %}
+    {% elif stage == 'complete' %}
+        {% set current_url = '/wizard/feedback/' ~ run_id %}
+    {% elif is_running %}
+        {% set current_url = '/runs/' ~ run_id ~ '/status' %}
+    {% else %}
+        {% set current_url = '/runs/' ~ run_id ~ '/artifacts' %}
+    {% endif %}
+
     <div class="glass-card rounded-2xl p-5 mb-6">
         <div class="flex items-center gap-0">
 
-            {% set steps = [('Script', 0), ('Voice', 1), ('Scenes', 2), ('Clips', 3), ('Assembly', 4), ('Posted', 5)] %}
-            {% for label, idx in steps %}
+            {% set steps = [
+                ('Script',   0, '/wizard/approve/' ~ run_id),
+                ('Voice',    1, '/runs/' ~ run_id ~ '/voice'),
+                ('Scenes',   2, '/runs/' ~ run_id ~ '/artifacts'),
+                ('Clips',    3, ''),
+                ('Assembly', 4, ''),
+                ('Posted',   5, '/wizard/feedback/' ~ run_id),
+            ] %}
+            {% for label, idx, step_url in steps %}
                 {# Determine state #}
                 {% if idx < cur %}
                     {% set state = 'done' %}
@@ -57,17 +79,32 @@
                     {% set state = 'upcoming' %}
                 {% endif %}
 
-                <!-- Step -->
+                {# Resolve link href — done steps use step_url, current uses current_url, upcoming = no link #}
+                {% if state == 'done' and step_url %}
+                    {% set href = step_url %}
+                {% elif state == 'current' %}
+                    {% set href = current_url %}
+                {% else %}
+                    {% set href = '' %}
+                {% endif %}
+
+                <!-- Step: wrap entire column in <a> if clickable -->
+                {% if href %}
+                <a href="{{ href }}"
+                   class="flex flex-col items-center flex-1 min-w-0 cursor-pointer group/step">
+                {% else %}
                 <div class="flex flex-col items-center flex-1 min-w-0">
+                {% endif %}
+
                     <!-- Circle -->
                     {% if state == 'done' %}
-                    <div class="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center shrink-0">
+                    <div class="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center shrink-0 transition-colors group-hover/step:bg-green-400">
                         <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
                         </svg>
                     </div>
                     {% elif state == 'current' %}
-                    <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center shrink-0 ring-4 ring-blue-500/20">
+                    <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center shrink-0 ring-4 ring-blue-500/20 transition-colors group-hover/step:bg-blue-400">
                         {% if is_running %}
                         <div class="w-3 h-3 rounded-full bg-white animate-pulse"></div>
                         {% else %}
@@ -82,12 +119,17 @@
 
                     <!-- Label -->
                     <span class="text-xs mt-1.5 font-medium truncate w-full text-center
-                        {% if state == 'done' %}text-green-400
-                        {% elif state == 'current' %}text-blue-300
+                        {% if state == 'done' %}text-green-400 group-hover/step:text-green-300
+                        {% elif state == 'current' %}text-blue-300 group-hover/step:text-blue-200
                         {% else %}text-gray-600{% endif %}">
                         {{ label }}
                     </span>
+
+                {% if href %}
+                </a>
+                {% else %}
                 </div>
+                {% endif %}
 
                 <!-- Connector (not after last step) -->
                 {% if not loop.last %}

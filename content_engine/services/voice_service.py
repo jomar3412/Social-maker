@@ -10,12 +10,15 @@ Handles:
 
 import os
 import json
+import logging
 import time
 from pathlib import Path
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Optional
 from enum import Enum
+
+logger = logging.getLogger(__name__)
 
 
 def _load_env_if_needed():
@@ -259,30 +262,49 @@ class VoiceService:
 
             client = ElevenLabs(api_key=self.api_key)
 
-            audio_iter = client.text_to_speech.convert(
-                voice_id=settings.voice_id,
-                text=script,
-                model_id=settings.model_id,
-                language_code=settings.language_code,
-                voice_settings=ELVoiceSettings(
-                    stability=settings.stability,
-                    similarity_boost=settings.similarity_boost,
-                    style=settings.style,
-                    use_speaker_boost=settings.use_speaker_boost,
-                    speed=settings.speed,
-                ),
-                apply_text_normalization="auto",
-                output_format="mp3_44100_128",
+            logger.info(
+                "[voice] convert() → model=%s voice=%s script_preview=%r",
+                settings.model_id, settings.voice_id, script[:100],
             )
+
+            try:
+                audio_iter = client.text_to_speech.convert(
+                    voice_id=settings.voice_id,
+                    text=script,
+                    model_id=settings.model_id,
+                    language_code=settings.language_code,
+                    voice_settings=ELVoiceSettings(
+                        stability=settings.stability,
+                        similarity_boost=settings.similarity_boost,
+                        style=settings.style,
+                        use_speaker_boost=settings.use_speaker_boost,
+                        speed=settings.speed,
+                    ),
+                    apply_text_normalization="auto",
+                    output_format="mp3_44100_128",
+                )
+            except Exception as api_err:
+                logger.error("[voice] convert() raised %s: %s", type(api_err).__name__, api_err, exc_info=True)
+                raise
 
             output_dir.mkdir(parents=True, exist_ok=True)
             audio_filename = f"voiceover_v{version}.mp3"
             audio_path = output_dir / audio_filename
 
+            bytes_written = 0
             with open(audio_path, "wb") as f:
                 for chunk in audio_iter:
                     if chunk:
                         f.write(chunk)
+                        bytes_written += len(chunk)
+
+            logger.info(
+                "[voice] %s written — %d bytes (%.1f KB), version=%d, model=%s, voice=%s",
+                audio_filename, bytes_written, bytes_written / 1024,
+                version, settings.model_id, settings.voice_id,
+            )
+            if bytes_written == 0:
+                logger.error("[voice] ElevenLabs returned 0 bytes — API may have rejected the request")
 
             duration_seconds = _get_mp3_duration(audio_path)
             if duration_seconds < 1.0:
