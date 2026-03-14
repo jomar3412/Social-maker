@@ -16,30 +16,72 @@
         </a>
     </div>
 
-    <!-- Section 1: Editable script -->
+    <!-- Section 1: Editable script + tag word bank -->
     <div class="glass-card rounded-xl p-5 mb-5">
+
+        <!-- Header row -->
         <div class="flex items-center justify-between mb-3">
             <div>
                 <label class="text-xs font-medium text-gray-400 uppercase tracking-wider block mb-0.5">Script</label>
                 <p class="text-xs text-gray-600">Edit below — insert [tags] anywhere to direct delivery.</p>
             </div>
-            <span class="shrink-0 badge-success text-xs px-2 py-1 rounded flex items-center gap-1">
-                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                </svg>
-                Approved
-            </span>
+            <div class="flex items-center gap-2">
+                <!-- Auto-enhance button (v3 only, shown/hidden by JS) -->
+                <button id="enhance-btn" onclick="autoEnhance()" style="display:none"
+                        class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-purple-500/15 border border-purple-500/30 text-purple-300 hover:bg-purple-500/25 hover:text-purple-200 transition-colors">
+                    <span id="enhance-icon">✨</span>
+                    <span id="enhance-spinner" class="hidden"><div class="spinner" style="width:12px;height:12px;border-width:2px"></div></span>
+                    Auto-enhance
+                </button>
+                <span class="shrink-0 badge-success text-xs px-2 py-1 rounded flex items-center gap-1">
+                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                    </svg>
+                    Approved
+                </span>
+            </div>
         </div>
-        <textarea id="voice-script-editor"
-                  rows="8"
-                  class="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-3 text-sm text-gray-100 leading-relaxed resize-y focus:outline-none focus:border-purple-500/40 placeholder-gray-600"
-                  placeholder="Script text will appear here…"
-                  spellcheck="false">{{ script_text }}</textarea>
+
+        <!-- Contenteditable script editor -->
+        <div id="voice-script-editor"
+             contenteditable="true"
+             spellcheck="false"
+             data-placeholder="Script text will appear here…"
+             class="min-h-[12rem] max-h-[28rem] overflow-y-auto w-full bg-black/30 border border-white/10 rounded-lg px-4 py-3 text-sm text-gray-100 leading-relaxed focus:outline-none focus:border-purple-500/40 whitespace-pre-wrap break-words"></div>
+
         <div class="flex items-center gap-4 mt-2 text-xs text-gray-600">
             {% if word_count %}<span>{{ word_count }} words</span>{% endif %}
             {% if duration_estimate %}<span>~{{ duration_estimate }}s</span>{% endif %}
         </div>
     </div>
+
+    <!-- Tag word bank (v3 only) -->
+    <details id="tag-panel" class="glass-card rounded-xl mb-5 group" style="display:none">
+        <summary class="flex items-center justify-between px-5 py-3.5 cursor-pointer select-none list-none">
+            <span class="text-xs font-medium text-purple-300 uppercase tracking-wider">v3 Audio Tags — click to insert</span>
+            <svg class="w-3.5 h-3.5 text-gray-500 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+        </summary>
+
+        <div class="px-5 pb-5 border-t border-white/5 pt-4 space-y-4">
+
+            <!-- Search -->
+            <input type="text" id="tag-search" placeholder="Search tags…"
+                   oninput="filterTags(this.value)"
+                   class="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-xs text-gray-200 placeholder-gray-600 focus:outline-none focus:border-purple-500/40">
+
+            <!-- Favorites row -->
+            <div id="favorites-section" class="hidden">
+                <p class="text-[10px] text-gray-600 uppercase tracking-wider mb-1.5">Favorites</p>
+                <div id="favorites-row" class="flex flex-wrap gap-1.5"></div>
+            </div>
+
+            <!-- Category sections -->
+            <div id="tag-categories" class="space-y-3"></div>
+
+        </div>
+    </details>
 
     {% if next_page == 'artifacts' %}
     <!-- Contextual gate banner -->
@@ -378,6 +420,11 @@
         document.getElementById('speaker-boost-row').style.display  = show;
         // Swap stability tooltip text
         document.getElementById('stability-tip').textContent = isV3 ? STABILITY_TIP_V3 : STABILITY_TIP_V2;
+        // Show tag panel and enhance button only for v3
+        const tagPanel   = document.getElementById('tag-panel');
+        const enhanceBtn = document.getElementById('enhance-btn');
+        if (tagPanel)   tagPanel.style.display   = isV3 ? '' : 'none';
+        if (enhanceBtn) enhanceBtn.style.display = isV3 ? '' : 'none';
     }
 
     function toggleSpeakerBoost() {
@@ -391,8 +438,25 @@
         btn.setAttribute('aria-checked', speakerBoostOn ? 'true' : 'false');
     }
 
+    function getPlainScript() {
+        // Extract plain text from contenteditable, preserving [tag] bracket text.
+        // Strips HTML spans but keeps their textContent intact.
+        const el = document.getElementById('voice-script-editor');
+        if (!el) return '';
+        // innerHTML → plain text: replace <br> with \n, strip all other tags
+        return el.innerHTML
+            .replace(/<br\s*\/?>/gi, '\n')
+            .replace(/<div>/gi, '\n')
+            .replace(/<\/div>/gi, '')
+            .replace(/<[^>]+>/g, '')
+            .replace(/&nbsp;/g, ' ')
+            .replace(/&amp;/g, '&')
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .trim();
+    }
+
     function collectSettings() {
-        const scriptEl = document.getElementById('voice-script-editor');
         return {
             model_id:          document.getElementById('model-select').value,
             stability:         document.getElementById('stability').value,
@@ -400,13 +464,177 @@
             style:             document.getElementById('style-exag').value,
             speed:             document.getElementById('speed').value,
             use_speaker_boost: speakerBoostOn ? 'true' : 'false',
-            voice_script:      scriptEl ? scriptEl.value.trim() : '',
+            voice_script:      getPlainScript(),
         };
+    }
+
+    // ── Script editor (contenteditable) ────────────────────────────────────
+    const INITIAL_SCRIPT = {{ script_text | tojson }};
+
+    function highlightTags(el) {
+        // Save caret position
+        const sel = window.getSelection();
+        let caretOffset = 0;
+        if (sel && sel.rangeCount) {
+            const range = sel.getRangeAt(0);
+            const preRange = document.createRange();
+            preRange.selectNodeContents(el);
+            preRange.setEnd(range.endContainer, range.endOffset);
+            caretOffset = preRange.toString().length;
+        }
+
+        const plain = getPlainScript();
+        // Build highlighted HTML: wrap [anything] in purple span
+        const html = plain
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/\[([^\]]*)\]/g, '<span style="color:#a855f7;font-weight:500">[$1]</span>');
+        el.innerHTML = html;
+
+        // Restore caret
+        restoreCaretPosition(el, caretOffset);
+    }
+
+    function restoreCaretPosition(el, offset) {
+        const sel = window.getSelection();
+        if (!sel) return;
+        const range = document.createRange();
+        let node = el, remaining = offset;
+        function walk(n) {
+            if (remaining <= 0) return true;
+            if (n.nodeType === Node.TEXT_NODE) {
+                if (n.length >= remaining) {
+                    range.setStart(n, remaining);
+                    range.setEnd(n, remaining);
+                    remaining = 0;
+                    return true;
+                }
+                remaining -= n.length;
+            } else {
+                for (const child of n.childNodes) {
+                    if (walk(child)) return true;
+                }
+            }
+            return false;
+        }
+        walk(el);
+        if (remaining > 0) range.selectNodeContents(el); // fallback to end
+        range.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(range);
+    }
+
+    function initScriptEditor() {
+        const el = document.getElementById('voice-script-editor');
+        if (!el || !INITIAL_SCRIPT) return;
+        // Set initial content with highlighting
+        const html = INITIAL_SCRIPT
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/\[([^\]]*)\]/g, '<span style="color:#a855f7;font-weight:500">[$1]</span>');
+        el.innerHTML = html;
+        // Re-highlight on every keystroke
+        el.addEventListener('input', () => highlightTags(el));
+    }
+
+    // ── Tag word bank data ──────────────────────────────────────────────────
+    const TAG_CATEGORIES = [
+        { name: 'Emotional states', tags: ['excited','nervous','frustrated','sorrowful','calm','tired','angry','sad','happily'] },
+        { name: 'Reactions',        tags: ['sigh','laughs','laughs softly','gulps','gasps','whispers','chuckles','sighs deeply'] },
+        { name: 'Cognitive beats',  tags: ['pauses','hesitates','stammers','resigned tone','deliberately'] },
+        { name: 'Tone cues',        tags: ['cheerfully','flatly','deadpan','playfully','annoyed','casual'] },
+        { name: 'Delivery',         tags: ['shouting','whispering','rushed','slowly','drawn out','timidly'] },
+    ];
+    const FAV_KEY = 'el_tag_favorites';
+
+    function getFavorites() {
+        try { return JSON.parse(localStorage.getItem(FAV_KEY) || '[]'); }
+        catch { return []; }
+    }
+    function saveFavorites(favs) {
+        localStorage.setItem(FAV_KEY, JSON.stringify(favs));
+    }
+
+    function insertTag(tag) {
+        const el = document.getElementById('voice-script-editor');
+        if (!el) return;
+        el.focus();
+        const sel = window.getSelection();
+        const tagText = `[${tag}]`;
+
+        if (sel && sel.rangeCount && el.contains(sel.getRangeAt(0).commonAncestorContainer)) {
+            const range = sel.getRangeAt(0);
+            range.deleteContents();
+            range.insertNode(document.createTextNode(tagText));
+            range.collapse(false);
+            sel.removeAllRanges();
+            sel.addRange(range);
+        } else {
+            // No cursor in editor — append to end
+            el.appendChild(document.createTextNode(tagText));
+        }
+        highlightTags(el);
+    }
+
+    function toggleFavorite(tag) {
+        let favs = getFavorites();
+        if (favs.includes(tag)) {
+            favs = favs.filter(f => f !== tag);
+        } else {
+            favs.push(tag);
+        }
+        saveFavorites(favs);
+        renderTagPanel();
+    }
+
+    function makeTagChip(tag, isFav) {
+        const favs = getFavorites();
+        const starred = favs.includes(tag);
+        return `<span class="inline-flex items-center gap-0.5 rounded-md bg-white/5 border border-white/10 hover:border-purple-500/40 hover:bg-purple-500/10 transition-colors">
+            <button onclick="insertTag('${escHtml(tag)}')"
+                    class="px-2 py-1 text-xs text-gray-300 hover:text-purple-300 transition-colors">
+                [${escHtml(tag)}]
+            </button>
+            <button onclick="toggleFavorite('${escHtml(tag)}')"
+                    class="pr-1.5 text-[10px] ${starred ? 'text-yellow-400' : 'text-gray-600 hover:text-yellow-400'} transition-colors"
+                    title="${starred ? 'Remove from favorites' : 'Add to favorites'}">★</button>
+        </span>`;
+    }
+
+    function renderTagPanel(filter) {
+        const favs = getFavorites();
+
+        // Favorites row
+        const favSection = document.getElementById('favorites-section');
+        const favRow = document.getElementById('favorites-row');
+        if (favs.length) {
+            favSection.classList.remove('hidden');
+            favRow.innerHTML = favs.map(t => makeTagChip(t, true)).join('');
+        } else {
+            favSection.classList.add('hidden');
+        }
+
+        // Category sections
+        const container = document.getElementById('tag-categories');
+        const q = (filter || '').toLowerCase().trim();
+
+        container.innerHTML = TAG_CATEGORIES.map(cat => {
+            const filtered = q ? cat.tags.filter(t => t.includes(q)) : cat.tags;
+            if (!filtered.length) return '';
+            return `<div>
+                <p class="text-[10px] text-gray-600 uppercase tracking-wider mb-1.5">${escHtml(cat.name)}</p>
+                <div class="flex flex-wrap gap-1.5">${filtered.map(t => makeTagChip(t, false)).join('')}</div>
+            </div>`;
+        }).join('');
+    }
+
+    function filterTags(q) {
+        renderTagPanel(q);
     }
 
     // Run once on load to set initial visibility
     document.addEventListener('DOMContentLoaded', () => {
         onModelChange(document.getElementById('model-select').value);
+        initScriptEditor();
+        renderTagPanel();
     });
 
     // ── Voice list ─────────────────────────────────────────────────────────
