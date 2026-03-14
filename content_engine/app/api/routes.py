@@ -156,6 +156,34 @@ async def list_voices():
     ]
 
 
+@router.get("/voices")
+async def list_elevenlabs_voices():
+    """Fetch all available ElevenLabs voices with preview URLs."""
+    import os
+    from elevenlabs.client import ElevenLabs
+
+    api_key = os.environ.get("ELEVENLABS_API_KEY")
+    if not api_key:
+        raise HTTPException(status_code=503, detail="ELEVENLABS_API_KEY not set")
+
+    try:
+        client = ElevenLabs(api_key=api_key)
+        response = client.voices.get_all()
+        voices = []
+        for v in response.voices:
+            voices.append({
+                "voice_id":    v.voice_id or "",
+                "name":        v.name or "",
+                "category":    v.category or "generated",
+                "description": v.description or "",
+                "preview_url": v.preview_url or "",
+            })
+        voices.sort(key=lambda v: (0 if v["category"] == "premade" else 1, v["name"].lower()))
+        return voices
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"ElevenLabs API error: {str(e)}")
+
+
 @router.get("/presets/visuals")
 async def list_visuals():
     """List available visual modes."""
@@ -2888,15 +2916,19 @@ async def generate_voice(request: Request, run_id: str):
         shot_data = json.loads(shot_list_path.read_text())
         scenes = shot_data if isinstance(shot_data, list) else shot_data.get("shot_list", [])
 
-    # Get voice preset from config
-    voice_preset = record.config.get("voice_preset", "deep_motivational")
-    preset_data = VOICE_PRESETS.get(voice_preset, VOICE_PRESETS["deep_motivational"])
-
-    settings = VoiceSettings(
-        voice_id=preset_data["voice_id"],
-        stability=preset_data.get("stability", 0.5),
-        similarity_boost=preset_data.get("similarity_boost", 0.75),
-    )
+    # voice_id from POST body takes priority; fall back to preset from run config
+    form_data = await request.form()
+    voice_id = form_data.get("voice_id", "").strip()
+    if voice_id:
+        settings = VoiceSettings(voice_id=voice_id)
+    else:
+        voice_preset = record.config.get("voice_preset", "deep_motivational")
+        preset_data = VOICE_PRESETS.get(voice_preset, VOICE_PRESETS["deep_motivational"])
+        settings = VoiceSettings(
+            voice_id=preset_data["voice_id"],
+            stability=preset_data.get("stability", 0.5),
+            similarity_boost=preset_data.get("similarity_boost", 0.75),
+        )
 
     # Generate voice
     voice_service = get_voice_service()
@@ -2976,21 +3008,26 @@ async def regenerate_voice(request: Request, run_id: str):
     # Parse form data for settings/notes
     form_data = await request.form()
     notes = form_data.get("notes", "")
-    voice_preset = form_data.get("voice_preset", record.config.get("voice_preset", "deep_motivational"))
-
-    preset_data = VOICE_PRESETS.get(voice_preset, VOICE_PRESETS["deep_motivational"])
-    settings = VoiceSettings(
-        voice_id=preset_data["voice_id"],
-        stability=preset_data.get("stability", 0.5),
-        similarity_boost=preset_data.get("similarity_boost", 0.75),
-    )
+    voice_id = form_data.get("voice_id", "").strip()
+    if voice_id:
+        settings = VoiceSettings(voice_id=voice_id)
+    else:
+        voice_preset = form_data.get("voice_preset", record.config.get("voice_preset", "deep_motivational"))
+        preset_data = VOICE_PRESETS.get(voice_preset, VOICE_PRESETS["deep_motivational"])
+        settings = VoiceSettings(
+            voice_id=preset_data["voice_id"],
+            stability=preset_data.get("stability", 0.5),
+            similarity_boost=preset_data.get("similarity_boost", 0.75),
+        )
 
     # Get scenes
     shot_list_path = output_dir / "shot_list.json"
     scenes = None
     if shot_list_path.exists():
-        shot_data = json.loads(shot_list_path.read_text())
-        scenes = shot_data.get("scenes", [])
+        raw = shot_list_path.read_text().strip()
+        if raw:
+            shot_data = json.loads(raw)
+            scenes = shot_data if isinstance(shot_data, list) else shot_data.get("shot_list", [])
 
     voice_service = get_voice_service()
     result = voice_service.regenerate_voiceover(
@@ -3081,6 +3118,59 @@ async def get_voice_timestamps(run_id: str):
         return {"timestamps": data.get("scene_timestamps", [])}
 
     return {"timestamps": []}
+
+
+# === Clip Submission ===
+
+@router.post("/runs/{run_id}/clips/submit")
+async def submit_video_clips(request: Request, run_id: str):
+    """
+    Accept uploaded video clips and resume the pipeline from AWAITING_VIDEO_CLIPS.
+
+    Expects multipart form fields named clip_scene_1 through clip_scene_N.
+    Saves files to the run output directory, then calls resume_from_video_clips().
+    """
+    from content_engine.pipeline.orchestrator import PipelineOrchestrator
+
+    store = RunStore()
+    record = store.get_run(run_id)
+
+    if not record:
+        raise HTTPException(status_code=404, detail="Run not found")
+
+    if record.stage not in [RunStage.AWAITING_VIDEO_CLIPS, RunStage.VIDEO_CLIPS_READY]:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Run is not awaiting clips (current stage: {record.stage.value})"
+        )
+
+    if not record.output_path:
+        raise HTTPException(status_code=400, detail="Run has no output path")
+
+    output_dir = Path(record.output_path)
+
+    # Parse multipart form
+    form = await request.form()
+    saved = []
+    for field_name, file_obj in form.multi_items():
+        if field_name.startswith("clip_scene_") and hasattr(file_obj, "read"):
+            scene_num = field_name.replace("clip_scene_", "")
+            dest = output_dir / f"clip_scene_{scene_num}.mp4"
+            content = await file_obj.read()
+            dest.write_bytes(content)
+            saved.append(f"clip_scene_{scene_num}.mp4")
+
+    if not saved:
+        raise HTTPException(status_code=400, detail="No clip files received")
+
+    # Resume pipeline
+    orchestrator = PipelineOrchestrator()
+    success, message = orchestrator.resume_from_video_clips(run_id)
+
+    if not success:
+        raise HTTPException(status_code=500, detail=f"Pipeline resume failed: {message}")
+
+    return {"success": True, "clips_saved": saved, "stage": message}
 
 
 @router.get("/runs/{run_id}/scenes")

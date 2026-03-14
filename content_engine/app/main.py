@@ -11,6 +11,9 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 
+from dotenv import load_dotenv
+load_dotenv(dotenv_path=Path(__file__).parent.parent / ".env")
+
 from content_engine.services.drive_guard import DriveGuard
 from content_engine.services.preset_loader import PresetLoader
 from content_engine.services.run_store import RunStore, RunStage, FeedbackRecord, generate_display_title, WorkflowStage
@@ -247,6 +250,13 @@ def create_app() -> FastAPI:
                     meta = json.loads(meta_path.read_text())
                     hook_text = meta.get("hook", "")
 
+        # Check for voice file
+        has_voice = False
+        if record.output_path:
+            output_dir = Path(record.output_path)
+            if output_dir.exists():
+                has_voice = bool(list(output_dir.glob("voiceover_v*.mp3")))
+
         # Get quick feedback if exists
         quick_feedback = store.get_feedback(run_id)
 
@@ -291,11 +301,13 @@ def create_app() -> FastAPI:
                 "provider_type": provider_type,
                 "regenerations_remaining": regenerations_remaining,
                 "max_regenerations": max_regenerations,
+                "has_voice": has_voice,
+                "posted_at": record.posted_at,
             },
         )
 
     @app.get("/runs/{run_id}/voice", response_class=HTMLResponse)
-    async def run_voice_page(request: Request, run_id: str):
+    async def run_voice_page(request: Request, run_id: str, next: str = ""):
         """Voice generation page."""
         import json
         import os
@@ -396,6 +408,7 @@ def create_app() -> FastAPI:
                 "voice_presets": voice_presets,
                 "current_preset": config.get("voice_preset", "deep_motivational"),
                 "elevenlabs_available": elevenlabs_available,
+                "next_page": next,
             },
         )
 
@@ -453,7 +466,8 @@ def create_app() -> FastAPI:
             json_path = output_dir / "shot_list.json"
             if json_path.exists():
                 import json
-                raw_shots = json.loads(json_path.read_text())
+                _raw = json_path.read_text().strip()
+                raw_shots = json.loads(_raw) if _raw else []
                 for s in raw_shots:
                     scene_num = s.get("scene_number", 0)
                     beat_type = s.get("beat_type", "UNKNOWN")
@@ -559,6 +573,11 @@ def create_app() -> FastAPI:
                     sn = ts.get("scene_number", 0)
                     scene_timestamps_map[sn] = ts
             has_voice = bool(list(output_dir.glob("voiceover_v*.mp3")))
+
+        if not has_voice:
+            return RedirectResponse(
+                url=f"/runs/{run_id}/voice?next=artifacts", status_code=303
+            )
 
         # Check if run is still generating (for auto-refresh)
         is_generating = record.stage in [
