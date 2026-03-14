@@ -365,8 +365,11 @@ def create_app() -> FastAPI:
         voice_path = None
         duration_seconds = 0
         scene_timestamps = []
+        voice_versions = []
 
         if record.output_path:
+            import re as _re
+            from datetime import datetime as _dt
             output_dir = Path(record.output_path)
             voice_files = sorted(output_dir.glob("voiceover_v*.mp3"))
             stub_files = sorted(output_dir.glob("voiceover_v*_stub.json"))
@@ -380,6 +383,29 @@ def create_app() -> FastAPI:
                 stub_data = json.loads(stub_files[-1].read_text())
                 scene_timestamps = stub_data.get("scene_timestamps", [])
                 duration_seconds = stub_data.get("estimated_duration", 0)
+
+            # Build version history from mp3 files + sidecar meta
+            for mp3 in sorted(voice_files, key=lambda p: p.stat().st_mtime):
+                m = _re.search(r'voiceover_v(\d+)\.mp3', mp3.name)
+                if not m:
+                    continue
+                v = int(m.group(1))
+                meta_path = output_dir / f"voiceover_v{v}_meta.json"
+                meta = {}
+                if meta_path.exists():
+                    try:
+                        meta = json.loads(meta_path.read_text())
+                    except Exception:
+                        pass
+                mtime = mp3.stat().st_mtime
+                voice_versions.append({
+                    "version": v,
+                    "voice_name": meta.get("voice_name", meta.get("voice_id", "")[:12]),
+                    "voice_id": meta.get("voice_id", ""),
+                    "model_id": meta.get("model_id", ""),
+                    "size_kb": round(mp3.stat().st_size / 1024),
+                    "time_str": _dt.fromtimestamp(mtime).strftime("%-I:%M %p"),
+                })
 
         # Build voice presets list
         voice_presets = [
@@ -409,6 +435,7 @@ def create_app() -> FastAPI:
                 "current_preset": config.get("voice_preset", "deep_motivational"),
                 "elevenlabs_available": elevenlabs_available,
                 "next_page": next,
+                "voice_versions": voice_versions,
             },
         )
 

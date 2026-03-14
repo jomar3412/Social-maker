@@ -2957,6 +2957,7 @@ async def generate_voice(request: Request, run_id: str):
         )
 
     # Generate voice
+    voice_name = form_data.get("voice_name", "").strip()
     voice_service = get_voice_service()
     result = voice_service.generate_voiceover(
         script=script_text,
@@ -2968,6 +2969,17 @@ async def generate_voice(request: Request, run_id: str):
     # Update stage if successful
     if result.success:
         store.update_stage(run_id, RunStage.AWAITING_VOICEOVER_APPROVAL)
+        # Write sidecar metadata for version history
+        meta = {
+            "version": result.version,
+            "voice_id": settings.voice_id,
+            "voice_name": voice_name or settings.voice_id,
+            "model_id": settings.model_id,
+            "created_at": result.created_at,
+        }
+        (output_dir / f"voiceover_v{result.version}_meta.json").write_text(
+            json.dumps(meta, indent=2)
+        )
 
     if is_htmx_request(request):
         if result.success:
@@ -3080,6 +3092,7 @@ async def regenerate_voice(request: Request, run_id: str):
             shot_data = json.loads(raw)
             scenes = shot_data if isinstance(shot_data, list) else shot_data.get("shot_list", [])
 
+    voice_name = form_data.get("voice_name", "").strip()
     voice_service = get_voice_service()
     result = voice_service.regenerate_voiceover(
         script=script_text,
@@ -3088,6 +3101,18 @@ async def regenerate_voice(request: Request, run_id: str):
         scenes=scenes,
         notes=notes,
     )
+
+    if result.success:
+        meta = {
+            "version": result.version,
+            "voice_id": settings.voice_id,
+            "voice_name": voice_name or settings.voice_id,
+            "model_id": settings.model_id,
+            "created_at": result.created_at,
+        }
+        (output_dir / f"voiceover_v{result.version}_meta.json").write_text(
+            json.dumps(meta, indent=2)
+        )
 
     if is_htmx_request(request):
         if result.success:
