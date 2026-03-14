@@ -68,8 +68,20 @@
             {% endif %}
         </div>
 
+        <!-- Model Selector -->
+        <div class="mb-4">
+            <label class="text-xs font-medium text-gray-400 uppercase tracking-wider block mb-2">Model</label>
+            <select id="model-select"
+                    onchange="onModelChange(this.value)"
+                    class="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-purple-500/50">
+                <option value="eleven_multilingual_v3">Eleven v3 — most expressive</option>
+                <option value="eleven_multilingual_v2">Multilingual v2 — emotionally rich</option>
+                <option value="eleven_flash_v2_5">Flash v2.5 — faster</option>
+            </select>
+        </div>
+
         <!-- Voice Browser -->
-        <div class="mb-5">
+        <div class="mb-4">
             <div class="flex items-center justify-between mb-2">
                 <label class="text-xs font-medium text-gray-400 uppercase tracking-wider">Select Voice</label>
                 <span id="voice-list-status" class="text-xs text-gray-600">Loading...</span>
@@ -96,6 +108,81 @@
             <!-- Hidden audio element for previews -->
             <audio id="preview-audio" preload="none" class="hidden"></audio>
         </div>
+
+        <!-- Advanced Settings -->
+        <details id="advanced-settings" class="mb-4 group">
+            <summary class="flex items-center justify-between cursor-pointer select-none list-none py-2 border-t border-white/5">
+                <span class="text-xs font-medium text-gray-500 uppercase tracking-wider">Advanced Settings</span>
+                <svg class="w-3.5 h-3.5 text-gray-600 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </summary>
+
+            <div class="pt-3 space-y-4">
+
+                <!-- Stability -->
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="text-xs text-gray-400">Stability</label>
+                        <span id="stability-val" class="text-xs text-gray-500 font-mono">0.50</span>
+                    </div>
+                    <input type="range" id="stability" min="0" max="1" step="0.01" value="0.5"
+                           oninput="document.getElementById('stability-val').textContent = parseFloat(this.value).toFixed(2)"
+                           class="w-full h-1.5 rounded-full accent-purple-500 cursor-pointer">
+                    <div class="flex justify-between text-[10px] text-gray-600 mt-0.5">
+                        <span>More Variable</span><span>More Stable</span>
+                    </div>
+                </div>
+
+                <!-- Similarity -->
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="text-xs text-gray-400">Similarity</label>
+                        <span id="similarity-val" class="text-xs text-gray-500 font-mono">0.75</span>
+                    </div>
+                    <input type="range" id="similarity" min="0" max="1" step="0.01" value="0.75"
+                           oninput="document.getElementById('similarity-val').textContent = parseFloat(this.value).toFixed(2)"
+                           class="w-full h-1.5 rounded-full accent-purple-500 cursor-pointer">
+                </div>
+
+                <!-- Style Exaggeration (v2 and v3 only) -->
+                <div id="style-row">
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="text-xs text-gray-400">Style Exaggeration</label>
+                        <span id="style-val" class="text-xs text-gray-500 font-mono">0.00</span>
+                    </div>
+                    <input type="range" id="style-exag" min="0" max="1" step="0.01" value="0"
+                           oninput="document.getElementById('style-val').textContent = parseFloat(this.value).toFixed(2)"
+                           class="w-full h-1.5 rounded-full accent-purple-500 cursor-pointer">
+                </div>
+
+                <!-- Speed (v3 only) -->
+                <div id="speed-row">
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="text-xs text-gray-400">Speed</label>
+                        <span id="speed-val" class="text-xs text-gray-500 font-mono">1.00</span>
+                    </div>
+                    <input type="range" id="speed" min="0.7" max="1.3" step="0.01" value="1.0"
+                           oninput="document.getElementById('speed-val').textContent = parseFloat(this.value).toFixed(2)"
+                           class="w-full h-1.5 rounded-full accent-purple-500 cursor-pointer">
+                    <div class="flex justify-between text-[10px] text-gray-600 mt-0.5">
+                        <span>0.7×</span><span>1.3×</span>
+                    </div>
+                </div>
+
+                <!-- Speaker Boost toggle -->
+                <div class="flex items-center justify-between">
+                    <label class="text-xs text-gray-400">Speaker Boost</label>
+                    <button type="button" id="speaker-boost-btn" onclick="toggleSpeakerBoost()"
+                            class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-purple-500 transition-colors focus:outline-none"
+                            role="switch" aria-checked="true">
+                        <span id="speaker-boost-knob"
+                              class="pointer-events-none inline-block h-4 w-4 translate-x-4 rounded-full bg-white shadow transition-transform"></span>
+                    </button>
+                </div>
+
+            </div>
+        </details>
 
         <!-- State: no voice and no stub -->
         {% if not voice_exists and not stub_exists %}
@@ -247,6 +334,45 @@
     let selectedVoiceId   = '';
     let currentPreviewUrl = '';
     let previewPlaying    = false;
+    let speakerBoostOn    = true;
+
+    // ── Model / settings helpers ────────────────────────────────────────────
+    function onModelChange(modelId) {
+        const styleRow = document.getElementById('style-row');
+        const speedRow = document.getElementById('speed-row');
+        // Style: v2 and v3 only (not flash)
+        const showStyle = modelId === 'eleven_multilingual_v3' || modelId === 'eleven_multilingual_v2';
+        styleRow.style.display = showStyle ? '' : 'none';
+        // Speed: v3 only
+        speedRow.style.display = modelId === 'eleven_multilingual_v3' ? '' : 'none';
+    }
+
+    function toggleSpeakerBoost() {
+        speakerBoostOn = !speakerBoostOn;
+        const btn   = document.getElementById('speaker-boost-btn');
+        const knob  = document.getElementById('speaker-boost-knob');
+        btn.classList.toggle('bg-purple-500', speakerBoostOn);
+        btn.classList.toggle('bg-white/15', !speakerBoostOn);
+        knob.classList.toggle('translate-x-4', speakerBoostOn);
+        knob.classList.toggle('translate-x-0', !speakerBoostOn);
+        btn.setAttribute('aria-checked', speakerBoostOn ? 'true' : 'false');
+    }
+
+    function collectSettings() {
+        return {
+            model_id:          document.getElementById('model-select').value,
+            stability:         document.getElementById('stability').value,
+            similarity_boost:  document.getElementById('similarity').value,
+            style:             document.getElementById('style-exag').value,
+            speed:             document.getElementById('speed').value,
+            use_speaker_boost: speakerBoostOn ? 'true' : 'false',
+        };
+    }
+
+    // Run once on load to set initial visibility
+    document.addEventListener('DOMContentLoaded', () => {
+        onModelChange(document.getElementById('model-select').value);
+    });
 
     // ── Voice list ─────────────────────────────────────────────────────────
     async function loadVoices() {
@@ -387,6 +513,8 @@
 
         const body = new FormData();
         if (selectedVoiceId) body.append('voice_id', selectedVoiceId);
+        const s = collectSettings();
+        Object.entries(s).forEach(([k, v]) => body.append(k, v));
 
         try {
             const res = await fetch('/api/runs/{{ run_id }}/voice/generate', {
@@ -422,6 +550,8 @@
         if (selectedVoiceId) body.append('voice_id', selectedVoiceId);
         const notes = document.getElementById('regen-notes');
         if (notes) body.append('notes', notes.value);
+        const s = collectSettings();
+        Object.entries(s).forEach(([k, v]) => body.append(k, v));
 
         try {
             const res = await fetch('/api/runs/{{ run_id }}/voice/regenerate', {

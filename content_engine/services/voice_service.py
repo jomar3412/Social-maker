@@ -81,7 +81,9 @@ class VoiceSettings:
     similarity_boost: float = 0.75
     style: float = 0.0
     use_speaker_boost: bool = True
-    model_id: str = "eleven_multilingual_v2"
+    model_id: str = "eleven_multilingual_v3"
+    speed: float = 1.0
+    language_code: str = "en"
 
     @classmethod
     def from_dict(cls, data: dict) -> "VoiceSettings":
@@ -93,7 +95,9 @@ class VoiceSettings:
             similarity_boost=data.get("similarity_boost", 0.75),
             style=data.get("style", 0.0),
             use_speaker_boost=data.get("use_speaker_boost", True),
-            model_id=data.get("model_id", "eleven_multilingual_v2"),
+            model_id=data.get("model_id", "eleven_multilingual_v3"),
+            speed=data.get("speed", 1.0),
+            language_code=data.get("language_code", "en"),
         )
 
     def to_dict(self) -> dict:
@@ -105,6 +109,8 @@ class VoiceSettings:
             "style": self.style,
             "use_speaker_boost": self.use_speaker_boost,
             "model_id": self.model_id,
+            "speed": self.speed,
+            "language_code": self.language_code,
         }
 
 
@@ -257,12 +263,15 @@ class VoiceService:
                 voice_id=settings.voice_id,
                 text=script,
                 model_id=settings.model_id,
+                language_code=settings.language_code,
                 voice_settings=ELVoiceSettings(
                     stability=settings.stability,
                     similarity_boost=settings.similarity_boost,
                     style=settings.style,
                     use_speaker_boost=settings.use_speaker_boost,
+                    speed=settings.speed,
                 ),
+                apply_text_normalization="auto",
                 output_format="mp3_44100_128",
             )
 

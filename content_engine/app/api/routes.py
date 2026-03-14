@@ -2919,15 +2919,39 @@ async def generate_voice(request: Request, run_id: str):
     # voice_id from POST body takes priority; fall back to preset from run config
     form_data = await request.form()
     voice_id = form_data.get("voice_id", "").strip()
+
+    # Read all ElevenLabs settings from form (with defaults matching VoiceSettings)
+    model_id = form_data.get("model_id", "eleven_multilingual_v3").strip() or "eleven_multilingual_v3"
+    try:
+        stability = float(form_data.get("stability", 0.5))
+        similarity_boost = float(form_data.get("similarity_boost", 0.75))
+        style = float(form_data.get("style", 0.0))
+        speed = float(form_data.get("speed", 1.0))
+    except (ValueError, TypeError):
+        stability, similarity_boost, style, speed = 0.5, 0.75, 0.0, 1.0
+    use_speaker_boost = form_data.get("use_speaker_boost", "true").lower() != "false"
+
     if voice_id:
-        settings = VoiceSettings(voice_id=voice_id)
+        settings = VoiceSettings(
+            voice_id=voice_id,
+            model_id=model_id,
+            stability=stability,
+            similarity_boost=similarity_boost,
+            style=style,
+            speed=speed,
+            use_speaker_boost=use_speaker_boost,
+        )
     else:
         voice_preset = record.config.get("voice_preset", "deep_motivational")
         preset_data = VOICE_PRESETS.get(voice_preset, VOICE_PRESETS["deep_motivational"])
         settings = VoiceSettings(
             voice_id=preset_data["voice_id"],
-            stability=preset_data.get("stability", 0.5),
-            similarity_boost=preset_data.get("similarity_boost", 0.75),
+            model_id=model_id,
+            stability=stability if form_data.get("stability") else preset_data.get("stability", 0.5),
+            similarity_boost=similarity_boost if form_data.get("similarity_boost") else preset_data.get("similarity_boost", 0.75),
+            style=style,
+            speed=speed,
+            use_speaker_boost=use_speaker_boost,
         )
 
     # Generate voice
@@ -3009,15 +3033,39 @@ async def regenerate_voice(request: Request, run_id: str):
     form_data = await request.form()
     notes = form_data.get("notes", "")
     voice_id = form_data.get("voice_id", "").strip()
+
+    # Read all ElevenLabs settings from form
+    model_id = form_data.get("model_id", "eleven_multilingual_v3").strip() or "eleven_multilingual_v3"
+    try:
+        stability = float(form_data.get("stability", 0.5))
+        similarity_boost = float(form_data.get("similarity_boost", 0.75))
+        style = float(form_data.get("style", 0.0))
+        speed = float(form_data.get("speed", 1.0))
+    except (ValueError, TypeError):
+        stability, similarity_boost, style, speed = 0.5, 0.75, 0.0, 1.0
+    use_speaker_boost = form_data.get("use_speaker_boost", "true").lower() != "false"
+
     if voice_id:
-        settings = VoiceSettings(voice_id=voice_id)
+        settings = VoiceSettings(
+            voice_id=voice_id,
+            model_id=model_id,
+            stability=stability,
+            similarity_boost=similarity_boost,
+            style=style,
+            speed=speed,
+            use_speaker_boost=use_speaker_boost,
+        )
     else:
         voice_preset = form_data.get("voice_preset", record.config.get("voice_preset", "deep_motivational"))
         preset_data = VOICE_PRESETS.get(voice_preset, VOICE_PRESETS["deep_motivational"])
         settings = VoiceSettings(
             voice_id=preset_data["voice_id"],
-            stability=preset_data.get("stability", 0.5),
-            similarity_boost=preset_data.get("similarity_boost", 0.75),
+            model_id=model_id,
+            stability=stability if form_data.get("stability") else preset_data.get("stability", 0.5),
+            similarity_boost=similarity_boost if form_data.get("similarity_boost") else preset_data.get("similarity_boost", 0.75),
+            style=style,
+            speed=speed,
+            use_speaker_boost=use_speaker_boost,
         )
 
     # Get scenes
