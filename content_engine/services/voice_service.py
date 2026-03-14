@@ -84,7 +84,7 @@ class VoiceSettings:
     similarity_boost: float = 0.75
     style: float = 0.0
     use_speaker_boost: bool = True
-    model_id: str = "eleven_multilingual_v3"
+    model_id: str = "eleven_v3"
     speed: float = 1.0
     language_code: str = "en"
 
@@ -98,7 +98,7 @@ class VoiceSettings:
             similarity_boost=data.get("similarity_boost", 0.75),
             style=data.get("style", 0.0),
             use_speaker_boost=data.get("use_speaker_boost", True),
-            model_id=data.get("model_id", "eleven_multilingual_v3"),
+            model_id=data.get("model_id", "eleven_v3"),
             speed=data.get("speed", 1.0),
             language_code=data.get("language_code", "en"),
         )
@@ -267,22 +267,39 @@ class VoiceService:
                 settings.model_id, settings.voice_id, script[:100],
             )
 
-            try:
-                audio_iter = client.text_to_speech.convert(
-                    voice_id=settings.voice_id,
-                    text=script,
-                    model_id=settings.model_id,
-                    language_code=settings.language_code,
-                    voice_settings=ELVoiceSettings(
-                        stability=settings.stability,
-                        similarity_boost=settings.similarity_boost,
-                        style=settings.style,
-                        use_speaker_boost=settings.use_speaker_boost,
-                        speed=settings.speed,
-                    ),
-                    apply_text_normalization="auto",
-                    output_format="mp3_44100_128",
+            is_v3 = settings.model_id == "eleven_v3"
+
+            # v3 accepts speed inside VoiceSettings but NOT language_code.
+            # v2/flash accept language_code but NOT speed inside VoiceSettings.
+            if is_v3:
+                el_voice_settings = ELVoiceSettings(
+                    stability=settings.stability,
+                    similarity_boost=settings.similarity_boost,
+                    style=settings.style,
+                    use_speaker_boost=settings.use_speaker_boost,
+                    speed=settings.speed,
                 )
+            else:
+                el_voice_settings = ELVoiceSettings(
+                    stability=settings.stability,
+                    similarity_boost=settings.similarity_boost,
+                    style=settings.style,
+                    use_speaker_boost=settings.use_speaker_boost,
+                )
+
+            convert_kwargs = dict(
+                voice_id=settings.voice_id,
+                text=script,
+                model_id=settings.model_id,
+                voice_settings=el_voice_settings,
+                apply_text_normalization="auto",
+                output_format="mp3_44100_128",
+            )
+            if not is_v3:
+                convert_kwargs["language_code"] = settings.language_code
+
+            try:
+                audio_iter = client.text_to_speech.convert(**convert_kwargs)
             except Exception as api_err:
                 logger.error("[voice] convert() raised %s: %s", type(api_err).__name__, api_err, exc_info=True)
                 raise

@@ -129,7 +129,7 @@
             <select id="model-select"
                     onchange="onModelChange(this.value)"
                     class="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-purple-500/50">
-                <option value="eleven_multilingual_v3">Eleven v3 — most expressive</option>
+                <option value="eleven_v3">Eleven v3 — most expressive</option>
                 <option value="eleven_multilingual_v2">Multilingual v2 — emotionally rich</option>
                 <option value="eleven_flash_v2_5">Flash v2.5 — faster</option>
             </select>
@@ -424,7 +424,7 @@
     const STABILITY_TIP_V2  = 'Increasing stability will make the voice more consistent between regenerations, but it can also make it sound a bit monotone. On longer text fragments, we recommend lowering this value.';
 
     function onModelChange(modelId) {
-        const isV3 = modelId === 'eleven_multilingual_v3';
+        const isV3 = modelId === 'eleven_v3';
         // v3: stability only; v2/flash: all controls
         const show = isV3 ? 'none' : '';
         document.getElementById('similarity-row').style.display     = show;

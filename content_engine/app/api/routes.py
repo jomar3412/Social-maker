@@ -2923,7 +2923,7 @@ async def generate_voice(request: Request, run_id: str):
     voice_id = form_data.get("voice_id", "").strip()
 
     # Read all ElevenLabs settings from form (with defaults matching VoiceSettings)
-    model_id = form_data.get("model_id", "eleven_multilingual_v3").strip() or "eleven_multilingual_v3"
+    model_id = form_data.get("model_id", "eleven_v3").strip() or "eleven_v3"
     try:
         stability = float(form_data.get("stability", 0.5))
         similarity_boost = float(form_data.get("similarity_boost", 0.75))
@@ -3038,7 +3038,7 @@ async def regenerate_voice(request: Request, run_id: str):
     voice_id = form_data.get("voice_id", "").strip()
 
     # Read all ElevenLabs settings from form
-    model_id = form_data.get("model_id", "eleven_multilingual_v3").strip() or "eleven_multilingual_v3"
+    model_id = form_data.get("model_id", "eleven_v3").strip() or "eleven_v3"
     try:
         stability = float(form_data.get("stability", 0.5))
         similarity_boost = float(form_data.get("similarity_boost", 0.75))
