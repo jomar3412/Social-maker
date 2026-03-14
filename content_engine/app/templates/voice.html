@@ -123,7 +123,13 @@
                 <!-- Stability -->
                 <div>
                     <div class="flex items-center justify-between mb-1">
-                        <label class="text-xs text-gray-400">Stability</label>
+                        <div class="flex items-center gap-1">
+                            <label class="text-xs text-gray-400">Stability</label>
+                            <span class="relative group/tip cursor-help">
+                                <svg class="w-3 h-3 text-gray-600 hover:text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/></svg>
+                                <span id="stability-tip" class="absolute bottom-full left-0 mb-2 w-64 p-2.5 text-xs text-gray-200 bg-gray-900 border border-white/10 rounded-lg shadow-xl hidden group-hover/tip:block z-10 leading-relaxed pointer-events-none"></span>
+                            </span>
+                        </div>
                         <span id="stability-val" class="text-xs text-gray-500 font-mono">0.50</span>
                     </div>
                     <input type="range" id="stability" min="0" max="1" step="0.01" value="0.5"
@@ -135,9 +141,15 @@
                 </div>
 
                 <!-- Similarity -->
-                <div>
+                <div id="similarity-row">
                     <div class="flex items-center justify-between mb-1">
-                        <label class="text-xs text-gray-400">Similarity</label>
+                        <div class="flex items-center gap-1">
+                            <label class="text-xs text-gray-400">Similarity</label>
+                            <span class="relative group/tip cursor-help">
+                                <svg class="w-3 h-3 text-gray-600 hover:text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/></svg>
+                                <span class="absolute bottom-full left-0 mb-2 w-64 p-2.5 text-xs text-gray-200 bg-gray-900 border border-white/10 rounded-lg shadow-xl hidden group-hover/tip:block z-10 leading-relaxed pointer-events-none">High enhancement boosts overall voice clarity and targets speaker similarity. Very high values can cause artifacts, so adjust this setting to find the optimal value is encouraged.</span>
+                            </span>
+                        </div>
                         <span id="similarity-val" class="text-xs text-gray-500 font-mono">0.75</span>
                     </div>
                     <input type="range" id="similarity" min="0" max="1" step="0.01" value="0.75"
@@ -145,10 +157,16 @@
                            class="w-full h-1.5 rounded-full accent-purple-500 cursor-pointer">
                 </div>
 
-                <!-- Style Exaggeration (v2 and v3 only) -->
+                <!-- Style Exaggeration -->
                 <div id="style-row">
                     <div class="flex items-center justify-between mb-1">
-                        <label class="text-xs text-gray-400">Style Exaggeration</label>
+                        <div class="flex items-center gap-1">
+                            <label class="text-xs text-gray-400">Style Exaggeration</label>
+                            <span class="relative group/tip cursor-help">
+                                <svg class="w-3 h-3 text-gray-600 hover:text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/></svg>
+                                <span class="absolute bottom-full left-0 mb-2 w-64 p-2.5 text-xs text-gray-200 bg-gray-900 border border-white/10 rounded-lg shadow-xl hidden group-hover/tip:block z-10 leading-relaxed pointer-events-none">High values are recommended if the style of the speech should be exaggerated compared to the uploaded audio. Higher values can lead to more instability in the generated speech. Setting this to 0.0 will greatly increase generation speed and is the default setting.</span>
+                            </span>
+                        </div>
                         <span id="style-val" class="text-xs text-gray-500 font-mono">0.00</span>
                     </div>
                     <input type="range" id="style-exag" min="0" max="1" step="0.01" value="0"
@@ -156,10 +174,16 @@
                            class="w-full h-1.5 rounded-full accent-purple-500 cursor-pointer">
                 </div>
 
-                <!-- Speed (v3 only) -->
+                <!-- Speed -->
                 <div id="speed-row">
                     <div class="flex items-center justify-between mb-1">
-                        <label class="text-xs text-gray-400">Speed</label>
+                        <div class="flex items-center gap-1">
+                            <label class="text-xs text-gray-400">Speed</label>
+                            <span class="relative group/tip cursor-help">
+                                <svg class="w-3 h-3 text-gray-600 hover:text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/></svg>
+                                <span class="absolute bottom-full left-0 mb-2 w-64 p-2.5 text-xs text-gray-200 bg-gray-900 border border-white/10 rounded-lg shadow-xl hidden group-hover/tip:block z-10 leading-relaxed pointer-events-none">Controls the speed of the generated speech. Values below 1.0 will slow down the speech, while values above 1.0 will speed it up. Extreme values may affect the quality of the generated speech.</span>
+                            </span>
+                        </div>
                         <span id="speed-val" class="text-xs text-gray-500 font-mono">1.00</span>
                     </div>
                     <input type="range" id="speed" min="0.7" max="1.3" step="0.01" value="1.0"
@@ -171,7 +195,7 @@
                 </div>
 
                 <!-- Speaker Boost toggle -->
-                <div class="flex items-center justify-between">
+                <div id="speaker-boost-row" class="flex items-center justify-between">
                     <label class="text-xs text-gray-400">Speaker Boost</label>
                     <button type="button" id="speaker-boost-btn" onclick="toggleSpeakerBoost()"
                             class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent bg-purple-500 transition-colors focus:outline-none"
@@ -337,14 +361,19 @@
     let speakerBoostOn    = true;
 
     // ── Model / settings helpers ────────────────────────────────────────────
+    const STABILITY_TIP_V3  = 'Sets how adventurous the model can be. Creative\u2009\u2014 expressive, varied phrasing and tone, can even sing. Natural\u2009\u2014 conversational balance. Robust\u2009\u2014 precise, stable, and predictable.';
+    const STABILITY_TIP_V2  = 'Increasing stability will make the voice more consistent between regenerations, but it can also make it sound a bit monotone. On longer text fragments, we recommend lowering this value.';
+
     function onModelChange(modelId) {
-        const styleRow = document.getElementById('style-row');
-        const speedRow = document.getElementById('speed-row');
-        // Style: v2 and v3 only (not flash)
-        const showStyle = modelId === 'eleven_multilingual_v3' || modelId === 'eleven_multilingual_v2';
-        styleRow.style.display = showStyle ? '' : 'none';
-        // Speed: v3 only
-        speedRow.style.display = modelId === 'eleven_multilingual_v3' ? '' : 'none';
+        const isV3 = modelId === 'eleven_multilingual_v3';
+        // v3: stability only; v2/flash: all controls
+        const show = isV3 ? 'none' : '';
+        document.getElementById('similarity-row').style.display     = show;
+        document.getElementById('style-row').style.display          = show;
+        document.getElementById('speed-row').style.display          = show;
+        document.getElementById('speaker-boost-row').style.display  = show;
+        // Swap stability tooltip text
+        document.getElementById('stability-tip').textContent = isV3 ? STABILITY_TIP_V3 : STABILITY_TIP_V2;
     }
 
     function toggleSpeakerBoost() {
