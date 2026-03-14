@@ -22,7 +22,13 @@
         <!-- Header row -->
         <div class="flex items-center justify-between mb-3">
             <div>
-                <label class="text-xs font-medium text-gray-400 uppercase tracking-wider block mb-0.5">Script</label>
+                <div class="flex items-center gap-3 mb-0.5">
+                    <label class="text-xs font-medium text-gray-400 uppercase tracking-wider">Script</label>
+                    <button id="restore-script-btn" onclick="restoreOriginalScript()"
+                            class="hidden text-xs text-gray-600 hover:text-gray-400 underline underline-offset-2 transition-colors">
+                        Restore original
+                    </button>
+                </div>
                 <p class="text-xs text-gray-600">Edit below — insert [tags] anywhere to direct delivery.</p>
             </div>
             <div class="flex items-center gap-2">
@@ -56,15 +62,18 @@
     </div>
 
     <!-- Tag word bank (v3 only) -->
-    <details id="tag-panel" class="glass-card rounded-xl mb-5 group" style="display:none">
-        <summary class="flex items-center justify-between px-5 py-3.5 cursor-pointer select-none list-none">
+    <div id="tag-panel" class="glass-card rounded-xl mb-5" style="display:none">
+        <div class="px-5 py-3.5 border-b border-white/5">
             <span class="text-xs font-medium text-purple-300 uppercase tracking-wider">v3 Audio Tags — click to insert</span>
-            <svg class="w-3.5 h-3.5 text-gray-500 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-            </svg>
-        </summary>
+        </div>
 
-        <div class="px-5 pb-5 border-t border-white/5 pt-4 space-y-4">
+        <div class="px-5 pb-5 pt-4 space-y-4">
+
+            <!-- Recommended (always shown, pinned) -->
+            <div>
+                <p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1.5">Recommended for Motivation</p>
+                <div id="recommended-row" class="flex flex-wrap gap-1.5"></div>
+            </div>
 
             <!-- Search -->
             <input type="text" id="tag-search" placeholder="Search tags…"
@@ -81,7 +90,7 @@
             <div id="tag-categories" class="space-y-3"></div>
 
         </div>
-    </details>
+    </div>
 
     {% if next_page == 'artifacts' %}
     <!-- Contextual gate banner -->
@@ -406,6 +415,10 @@
     let previewPlaying    = false;
     let speakerBoostOn    = true;
 
+    // ── Constants ──────────────────────────────────────────────────────────
+    const SCRIPT_LS_KEY = 'voice_script_{{ run_id }}';
+    const RECOMMENDED_TAGS = ['sighs','pauses','hesitates','calm','tired','quietly','with conviction','earnestly','softly'];
+
     // ── Model / settings helpers ────────────────────────────────────────────
     const STABILITY_TIP_V3  = 'Sets how adventurous the model can be. Creative\u2009\u2014 expressive, varied phrasing and tone, can even sing. Natural\u2009\u2014 conversational balance. Robust\u2009\u2014 precise, stable, and predictable.';
     const STABILITY_TIP_V2  = 'Increasing stability will make the voice more consistent between regenerations, but it can also make it sound a bit monotone. On longer text fragments, we recommend lowering this value.';
@@ -525,14 +538,48 @@
 
     function initScriptEditor() {
         const el = document.getElementById('voice-script-editor');
+        if (!el) return;
+
+        // Load saved script from localStorage, or fall back to server-provided script
+        const saved = localStorage.getItem(SCRIPT_LS_KEY);
+        const scriptToLoad = saved || INITIAL_SCRIPT;
+
+        // Show "Restore original" button when a saved edit exists
+        if (saved && saved !== INITIAL_SCRIPT) {
+            const restoreBtn = document.getElementById('restore-script-btn');
+            if (restoreBtn) restoreBtn.classList.remove('hidden');
+        }
+
+        if (!scriptToLoad) return;
+        const html = scriptToLoad
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/\[([^\]]*)\]/g, '<span style="color:#a855f7;font-weight:500">[$1]</span>');
+        el.innerHTML = html;
+
+        // Re-highlight on every keystroke; debounce localStorage save 500ms
+        let saveTimer;
+        el.addEventListener('input', () => {
+            highlightTags(el);
+            clearTimeout(saveTimer);
+            saveTimer = setTimeout(() => {
+                const plain = getPlainScript();
+                localStorage.setItem(SCRIPT_LS_KEY, plain);
+                const restoreBtn = document.getElementById('restore-script-btn');
+                if (restoreBtn) restoreBtn.classList.remove('hidden');
+            }, 500);
+        });
+    }
+
+    function restoreOriginalScript() {
+        localStorage.removeItem(SCRIPT_LS_KEY);
+        const el = document.getElementById('voice-script-editor');
         if (!el || !INITIAL_SCRIPT) return;
-        // Set initial content with highlighting
         const html = INITIAL_SCRIPT
             .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
             .replace(/\[([^\]]*)\]/g, '<span style="color:#a855f7;font-weight:500">[$1]</span>');
         el.innerHTML = html;
-        // Re-highlight on every keystroke
-        el.addEventListener('input', () => highlightTags(el));
+        const restoreBtn = document.getElementById('restore-script-btn');
+        if (restoreBtn) restoreBtn.classList.add('hidden');
     }
 
     // ── Tag word bank data ──────────────────────────────────────────────────
@@ -601,6 +648,12 @@
 
     function renderTagPanel(filter) {
         const favs = getFavorites();
+
+        // Recommended row — always rendered, never filtered
+        const recRow = document.getElementById('recommended-row');
+        if (recRow) {
+            recRow.innerHTML = RECOMMENDED_TAGS.map(t => makeTagChip(t, false)).join('');
+        }
 
         // Favorites row
         const favSection = document.getElementById('favorites-section');
@@ -867,6 +920,10 @@
                     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
                     .replace(/\[([^\]]*)\]/g, '<span style="color:#a855f7;font-weight:500">[$1]</span>');
                 editor.innerHTML = html;
+                // Persist enhanced script to localStorage
+                localStorage.setItem(SCRIPT_LS_KEY, data.enhanced_script);
+                const restoreBtn = document.getElementById('restore-script-btn');
+                if (restoreBtn) restoreBtn.classList.remove('hidden');
             }
         } catch (err) {
             showToast('Auto-enhance failed: ' + err.message, 'error');
