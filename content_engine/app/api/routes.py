@@ -2887,7 +2887,6 @@ async def generate_voice(request: Request, run_id: str):
     if not record:
         raise HTTPException(status_code=404, detail=f"Run not found: {run_id}")
 
-    # Get script from output files
     if not record.output_path:
         raise HTTPException(status_code=400, detail="No output path for this run")
 
@@ -2896,15 +2895,19 @@ async def generate_voice(request: Request, run_id: str):
 
     output_dir = Path(record.output_path)
 
-    # Check script.txt first (pipeline output), fall back to script.json
-    txt_path = output_dir / "script.txt"
-    json_path = output_dir / "script.json"
-    script_text = ""
-    if txt_path.exists():
-        script_text = txt_path.read_text().strip()
-    elif json_path.exists():
-        script_data = json.loads(json_path.read_text())
-        script_text = script_data.get("script", "")
+    # Read form data first (stream can only be consumed once)
+    form_data = await request.form()
+
+    # Use voice_script from form if provided, else fall back to disk
+    script_text = form_data.get("voice_script", "").strip()
+    if not script_text:
+        txt_path = output_dir / "script.txt"
+        json_path = output_dir / "script.json"
+        if txt_path.exists():
+            script_text = txt_path.read_text().strip()
+        elif json_path.exists():
+            script_data = json.loads(json_path.read_text())
+            script_text = script_data.get("script", "")
 
     if not script_text:
         raise HTTPException(status_code=400, detail="Script file not found or empty")
@@ -2917,7 +2920,6 @@ async def generate_voice(request: Request, run_id: str):
         scenes = shot_data if isinstance(shot_data, list) else shot_data.get("shot_list", [])
 
     # voice_id from POST body takes priority; fall back to preset from run config
-    form_data = await request.form()
     voice_id = form_data.get("voice_id", "").strip()
 
     # Read all ElevenLabs settings from form (with defaults matching VoiceSettings)
@@ -3016,22 +3018,23 @@ async def regenerate_voice(request: Request, run_id: str):
 
     output_dir = Path(record.output_path)
 
-    # Check script.txt first (pipeline output), fall back to script.json
-    txt_path = output_dir / "script.txt"
-    json_path = output_dir / "script.json"
-    script_text = ""
-    if txt_path.exists():
-        script_text = txt_path.read_text().strip()
-    elif json_path.exists():
-        script_data = json.loads(json_path.read_text())
-        script_text = script_data.get("script", "")
+    # Read form data first (stream can only be consumed once)
+    form_data = await request.form()
+    notes = form_data.get("notes", "")
+
+    # Use voice_script from form if provided, else fall back to disk
+    script_text = form_data.get("voice_script", "").strip()
+    if not script_text:
+        txt_path = output_dir / "script.txt"
+        json_path = output_dir / "script.json"
+        if txt_path.exists():
+            script_text = txt_path.read_text().strip()
+        elif json_path.exists():
+            script_data = json.loads(json_path.read_text())
+            script_text = script_data.get("script", "")
 
     if not script_text:
         raise HTTPException(status_code=400, detail="Script file not found or empty")
-
-    # Parse form data for settings/notes
-    form_data = await request.form()
-    notes = form_data.get("notes", "")
     voice_id = form_data.get("voice_id", "").strip()
 
     # Read all ElevenLabs settings from form

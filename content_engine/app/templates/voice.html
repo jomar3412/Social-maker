@@ -16,25 +16,29 @@
         </a>
     </div>
 
-    <!-- Section 1: Script reminder (collapsed) -->
-    <div class="glass-card rounded-xl p-4 mb-5 flex items-start justify-between gap-4">
-        <div class="flex-1 min-w-0">
-            {% if hook %}
-            <p class="text-gray-300 text-sm italic truncate">"{{ hook }}"</p>
-            {% else %}
-            <p class="text-gray-500 text-sm truncate">{{ display_title or run_id }}</p>
-            {% endif %}
-            <div class="flex items-center gap-3 mt-1.5 text-xs text-gray-500">
-                {% if word_count %}<span>{{ word_count }} words</span>{% endif %}
-                {% if duration_estimate %}<span>~{{ duration_estimate }}s</span>{% endif %}
+    <!-- Section 1: Editable script -->
+    <div class="glass-card rounded-xl p-5 mb-5">
+        <div class="flex items-center justify-between mb-3">
+            <div>
+                <label class="text-xs font-medium text-gray-400 uppercase tracking-wider block mb-0.5">Script</label>
+                <p class="text-xs text-gray-600">Edit below — insert [tags] anywhere to direct delivery.</p>
             </div>
+            <span class="shrink-0 badge-success text-xs px-2 py-1 rounded flex items-center gap-1">
+                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                </svg>
+                Approved
+            </span>
         </div>
-        <span class="shrink-0 badge-success text-xs px-2 py-1 rounded flex items-center gap-1">
-            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-            </svg>
-            Script Approved
-        </span>
+        <textarea id="voice-script-editor"
+                  rows="8"
+                  class="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-3 text-sm text-gray-100 leading-relaxed resize-y focus:outline-none focus:border-purple-500/40 placeholder-gray-600"
+                  placeholder="Script text will appear here…"
+                  spellcheck="false">{{ script_text }}</textarea>
+        <div class="flex items-center gap-4 mt-2 text-xs text-gray-600">
+            {% if word_count %}<span>{{ word_count }} words</span>{% endif %}
+            {% if duration_estimate %}<span>~{{ duration_estimate }}s</span>{% endif %}
+        </div>
     </div>
 
     {% if next_page == 'artifacts' %}
@@ -388,6 +392,7 @@
     }
 
     function collectSettings() {
+        const scriptEl = document.getElementById('voice-script-editor');
         return {
             model_id:          document.getElementById('model-select').value,
             stability:         document.getElementById('stability').value,
@@ -395,6 +400,7 @@
             style:             document.getElementById('style-exag').value,
             speed:             document.getElementById('speed').value,
             use_speaker_boost: speakerBoostOn ? 'true' : 'false',
+            voice_script:      scriptEl ? scriptEl.value.trim() : '',
         };
     }
 
