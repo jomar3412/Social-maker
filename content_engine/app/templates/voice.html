@@ -835,6 +835,59 @@
         }
     }
 
+    // ── Auto-enhance (Step 3) ──────────────────────────────────────────────
+    async function autoEnhance() {
+        const btn     = document.getElementById('enhance-btn');
+        const icon    = document.getElementById('enhance-icon');
+        const spinner = document.getElementById('enhance-spinner');
+        const editor  = document.getElementById('voice-script-editor');
+
+        const script = getPlainScript();
+        if (!script) { showToast('No script to enhance', 'error'); return; }
+
+        btn.disabled = true;
+        icon.classList.add('hidden');
+        spinner.classList.remove('hidden');
+
+        try {
+            const body = new FormData();
+            body.append('script', script);
+            const res = await fetch('/api/runs/{{ run_id }}/voice/enhance-script', {
+                method: 'POST',
+                body,
+            });
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                throw new Error(data.detail || res.statusText);
+            }
+            const data = await res.json();
+            if (data.enhanced_script) {
+                // Inject enhanced script into editor with highlighting
+                const html = data.enhanced_script
+                    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                    .replace(/\[([^\]]*)\]/g, '<span style="color:#a855f7;font-weight:500">[$1]</span>');
+                editor.innerHTML = html;
+            }
+        } catch (err) {
+            showToast('Auto-enhance failed: ' + err.message, 'error');
+        } finally {
+            btn.disabled = false;
+            icon.classList.remove('hidden');
+            spinner.classList.add('hidden');
+        }
+    }
+
+    function showToast(msg, type) {
+        const toast = document.createElement('div');
+        toast.className = `fixed bottom-6 right-6 z-50 px-4 py-3 rounded-xl text-sm font-medium shadow-xl border transition-opacity
+            ${type === 'error'
+                ? 'bg-red-900/80 border-red-500/30 text-red-200'
+                : 'bg-green-900/80 border-green-500/30 text-green-200'}`;
+        toast.textContent = msg;
+        document.body.appendChild(toast);
+        setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 400); }, 3500);
+    }
+
     // ── Seek (generated audio) ─────────────────────────────────────────────
     function seekToTime(seconds) {
         const audio = document.getElementById('voice-audio');

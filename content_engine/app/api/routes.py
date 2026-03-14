@@ -3104,6 +3104,58 @@ async def regenerate_voice(request: Request, run_id: str):
     return result.to_dict()
 
 
+@router.post("/runs/{run_id}/voice/enhance-script")
+async def enhance_script(request: Request, run_id: str):
+    """Use Claude CLI to insert v3 audio tags into a script."""
+    import subprocess
+    import os
+
+    store = RunStore()
+    record = store.get_run(run_id)
+    if not record:
+        raise HTTPException(status_code=404, detail=f"Run not found: {run_id}")
+
+    form_data = await request.form()
+    script = form_data.get("script", "").strip()
+    if not script:
+        raise HTTPException(status_code=400, detail="No script provided")
+
+    system_prompt = (
+        "You are an ElevenLabs v3 voice director. Given a motivational script, insert appropriate "
+        "v3 audio tags in square brackets to make it sound like a real human delivering emotional "
+        "content. Use tags from these categories: emotional states [excited][nervous][calm][tired], "
+        "reactions [sigh][laughs softly][gasps][whispers], cognitive beats [pauses][hesitates][stammers], "
+        "tone cues [cheerfully][flatly][playfully]. Rules: don't over-tag — maximum one tag per 2-3 "
+        "sentences. Place tags at natural emotional beats. Never tag every sentence. Return only the "
+        "enhanced script with tags inserted, nothing else."
+    )
+    full_prompt = f"{system_prompt}\n\n---\n\n{script}"
+
+    env = os.environ.copy()
+    env.pop("CLAUDECODE", None)
+    try:
+        result = subprocess.run(
+            ["claude", "-p", full_prompt],
+            capture_output=True,
+            text=True,
+            timeout=60,
+            env=env,
+        )
+    except subprocess.TimeoutExpired:
+        raise HTTPException(status_code=504, detail="Claude CLI timed out")
+    except FileNotFoundError:
+        raise HTTPException(status_code=503, detail="Claude CLI not found")
+
+    if result.returncode != 0:
+        raise HTTPException(status_code=502, detail=f"Claude CLI error: {result.stderr[:200]}")
+
+    enhanced = result.stdout.strip()
+    if not enhanced:
+        raise HTTPException(status_code=502, detail="Claude returned empty response")
+
+    return {"enhanced_script": enhanced}
+
+
 @router.post("/runs/{run_id}/voice/approve")
 async def approve_voice(request: Request, run_id: str):
     """Approve voiceover and continue to visuals stage."""
