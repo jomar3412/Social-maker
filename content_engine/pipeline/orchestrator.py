@@ -535,6 +535,56 @@ class PipelineOrchestrator:
         out_path.write_text("\n".join(lines))
         self._log(f"clip_prompts_ready.txt written ({len(lines)} lines)")
 
+    def resume_from_video_clips(self, run_id: str) -> tuple[bool, str]:
+        """
+        Resume pipeline after video clips have been submitted by the user.
+
+        Moves stage from AWAITING_VIDEO_CLIPS → VIDEO_CLIPS_READY → COMPLETE.
+        (FFmpeg assembly will be wired in here later.)
+
+        Returns:
+            (success, final_stage)
+        """
+        run_record = self.run_store.get_run(run_id)
+        if not run_record:
+            return False, f"Run not found: {run_id}"
+
+        if run_record.stage not in [RunStage.AWAITING_VIDEO_CLIPS, RunStage.VIDEO_CLIPS_READY]:
+            return False, f"Run not in clip-awaiting stage: {run_record.stage.value}"
+
+        try:
+            self._update_stage(
+                run_id,
+                RunStage.VIDEO_CLIPS_READY,
+                current_stage_name="Video Clips Ready",
+                progress_percent=97,
+            )
+            self._log(f"Video clips received for {run_id}, starting assembly stage")
+
+            # Stage: Video Assembly
+            self._update_stage(
+                run_id,
+                RunStage.VIDEO_ASSEMBLY,
+                current_stage_name="Assembling Video",
+                progress_percent=98,
+            )
+            self._log("Assembly stage (FFmpeg wiring pending)")
+
+            # Mark complete
+            self._update_stage(
+                run_id,
+                RunStage.COMPLETE,
+                current_stage_name="Complete",
+                progress_percent=100,
+            )
+            self._log("Pipeline complete")
+            return True, "complete"
+
+        except Exception as e:
+            self._log(f"Resume from clips error: {e}", level="ERROR")
+            self._update_stage(run_id, RunStage.FAILED, error_message=str(e))
+            return False, str(e)
+
     def _run_script_stages(
         self,
         config: RunConfig,

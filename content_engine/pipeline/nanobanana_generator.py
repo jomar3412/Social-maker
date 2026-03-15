@@ -285,8 +285,8 @@ class NanoBananaPromptGenerator:
         """
         profile = BEAT_PROFILES.get(beat_type, BEAT_PROFILES["TENSION"])
 
-        # Analyze voiceover for visual cues
-        visual_cues = self._extract_visual_cues(voiceover_segment)
+        # Analyze voiceover + visual_description for visual cues (LLM, with keyword fallback)
+        visual_cues = self._extract_visual_cues(voiceover_segment, visual_description or "")
 
         # Generate each specification component
         camera = self._generate_camera_spec(profile, visual_cues, scene_number)
@@ -319,12 +319,117 @@ class NanoBananaPromptGenerator:
 
         return spec
 
-    def _extract_visual_cues(self, voiceover: str) -> dict:
+    def _extract_visual_cues(self, voiceover: str, visual_description: str = "") -> dict:
         """
-        Extract visual cues from voiceover text.
+        Extract visual cues from voiceover + visual_description.
 
-        Analyzes the text for emotional tone, subject references,
-        and visual keywords.
+        Tries a Claude CLI call first for accurate environment analysis.
+        Falls back to the keyword scanner if the CLI is unavailable or times out.
+        """
+        llm_cues = self._extract_visual_cues_llm(voiceover, visual_description)
+        if llm_cues:
+            return llm_cues
+        return self._extract_visual_cues_keyword(voiceover, visual_description)
+
+    def _extract_visual_cues_llm(self, voiceover: str, visual_description: str) -> dict:
+        """
+        Ask Claude CLI to extract environment context as JSON.
+
+        Returns a merged cues dict on success, empty dict on any failure.
+        """
+        import subprocess, json as _json, os
+
+        prompt = (
+            "You are a cinematography assistant. Analyze this short video scene and return ONLY a JSON object — "
+            "no explanation, no markdown, no code fences.\n\n"
+            f'Voiceover: "{voiceover}"\n'
+            f'Visual concept: "{visual_description}"\n\n'
+            "Return exactly this JSON structure:\n"
+            '{\n'
+            '  "emotional_tone": "positive|challenging|reflective|neutral",\n'
+            '  "environment_type": "interior|exterior|nature|urban|abstract|cosmic",\n'
+            '  "time_of_day": "golden_hour|night|midday|morning|overcast|unspecified",\n'
+            '  "key_visual_elements": ["element1", "element2"],\n'
+            '  "avoid": ["contradiction1", "contradiction2"]\n'
+            '}'
+        )
+
+        # Skip when running inside a Claude Code session to avoid process hangs
+        if os.environ.get("CLAUDECODE"):
+            return {}
+
+        try:
+            env = os.environ.copy()
+            env.pop("CLAUDECODE", None)
+            proc = subprocess.Popen(
+                ["claude", "-p", prompt],
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                env=env, preexec_fn=os.setsid,
+            )
+            try:
+                raw_bytes, _ = proc.communicate(timeout=20)
+                raw = raw_bytes.decode("utf-8", errors="replace").strip()
+            except subprocess.TimeoutExpired:
+                import signal
+                os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+                proc.wait()
+                return {}
+
+            if not raw:
+                return {}
+
+            # Strip markdown fences if Claude wrapped it
+            if raw.startswith("```"):
+                raw = raw.split("```")[1]
+                if raw.startswith("json"):
+                    raw = raw[4:]
+                raw = raw.strip()
+
+            data = _json.loads(raw)
+
+            # Map LLM output to the cues dict shape the rest of the code expects
+            env_type = data.get("environment_type", "interior")
+            tod = data.get("time_of_day", "unspecified")
+
+            env_hint_map = {
+                "interior": "indoor",
+                "exterior": "outdoor",
+                "nature": "natural",
+                "urban": "urban",
+                "abstract": "abstract",
+                "cosmic": "abstract",
+            }
+            time_hint_map = {
+                "golden_hour": "evening",
+                "morning": "morning",
+                "night": "night",
+                "midday": "midday",
+                "overcast": "overcast",
+                "unspecified": "",
+            }
+
+            return {
+                "emotional_tone": data.get("emotional_tone", "neutral"),
+                "subject_references": [],
+                "action_keywords": [],
+                "environment_hints": [env_hint_map.get(env_type, "indoor")],
+                "time_hints": [t for t in [time_hint_map.get(tod, "")] if t],
+                # LLM-only extras consumed by _generate_environment_spec
+                "llm_environment_type": env_type,
+                "llm_time_of_day": tod,
+                "llm_key_elements": data.get("key_visual_elements", []),
+                "llm_avoid": data.get("avoid", []),
+            }
+
+        except (FileNotFoundError, ValueError, KeyError, _json.JSONDecodeError, OSError):
+            return {}
+
+    def _extract_visual_cues_keyword(self, voiceover: str, visual_description: str = "") -> dict:
+        """Keyword-scanner fallback when LLM extraction is unavailable.
+
+        Scans both voiceover and visual_description for environment/time cues.
+        visual_description is given higher weight since it was written specifically
+        for the visual context of the scene.
         """
         cues = {
             "emotional_tone": "neutral",
@@ -332,65 +437,131 @@ class NanoBananaPromptGenerator:
             "action_keywords": [],
             "environment_hints": [],
             "time_hints": [],
+            # LLM-shaped keys populated from keyword scan of visual_description
+            "llm_environment_type": "",
+            "llm_time_of_day": "",
+            "llm_key_elements": [],
+            "llm_avoid": [],
         }
 
-        voiceover_lower = voiceover.lower()
+        vd_lower = visual_description.lower()
+        vo_lower = voiceover.lower()
+        combined = vd_lower + " " + vo_lower
 
-        # Emotional tone detection
-        positive_words = ["good", "great", "happy", "success", "proud", "strong", "won", "achieved"]
-        negative_words = ["hard", "struggle", "difficult", "pain", "tired", "heavy", "failed"]
-        reflective_words = ["remember", "think", "realize", "understand", "know", "feel"]
+        # ── Emotional tone ────────────────────────────────────────────────────
+        positive_words = ["good", "great", "happy", "success", "proud", "strong", "won", "achieved",
+                          "sunlight", "clarity", "parting", "hope", "warm", "light"]
+        negative_words = ["hard", "struggle", "difficult", "pain", "tired", "heavy", "failed",
+                          "rain", "dark", "weight", "shadow"]
+        reflective_words = ["remember", "think", "realize", "understand", "know", "feel",
+                            "contemplat", "floating", "empty", "space"]
 
-        if any(w in voiceover_lower for w in positive_words):
+        if any(w in combined for w in positive_words):
             cues["emotional_tone"] = "positive"
-        elif any(w in voiceover_lower for w in negative_words):
+        elif any(w in combined for w in negative_words):
             cues["emotional_tone"] = "challenging"
-        elif any(w in voiceover_lower for w in reflective_words):
+        elif any(w in combined for w in reflective_words):
             cues["emotional_tone"] = "reflective"
 
-        # Subject references
-        if "you" in voiceover_lower:
+        # ── Subject references ────────────────────────────────────────────────
+        if "you" in vo_lower:
             cues["subject_references"].append("viewer-surrogate")
-        if any(w in voiceover_lower for w in ["person", "people", "someone", "anyone"]):
+        if any(w in combined for w in ["person", "people", "someone", "anyone", "figure"]):
             cues["subject_references"].append("person")
 
-        # Action keywords
+        # ── Action keywords ───────────────────────────────────────────────────
         action_patterns = [
-            ("walking", "walking"),
-            ("running", "running"),
-            ("standing", "standing"),
-            ("sitting", "seated"),
-            ("looking", "gazing"),
-            ("thinking", "contemplating"),
-            ("working", "working"),
-            ("moving", "in motion"),
+            ("walking", "walking"), ("running", "running"), ("standing", "standing"),
+            ("sitting", "seated"), ("looking", "gazing"), ("thinking", "contemplating"),
+            ("working", "working"), ("moving", "in motion"),
         ]
         for pattern, action in action_patterns:
-            if pattern in voiceover_lower:
+            if pattern in combined:
                 cues["action_keywords"].append(action)
 
-        # Environment hints
-        env_patterns = [
-            ("morning", "morning"),
-            ("night", "night"),
-            ("city", "urban"),
-            ("nature", "natural"),
-            ("office", "office"),
-            ("home", "home"),
-            ("outside", "outdoor"),
-            ("inside", "indoor"),
-        ]
-        for pattern, env in env_patterns:
-            if pattern in voiceover_lower:
-                cues["environment_hints"].append(env)
+        # ── Environment type (visual_description first, voiceover as fallback) ─
+        # Map keyword patterns to LLM-style environment_type values
+        env_type = ""
+        if any(w in vd_lower for w in ["window", "room", "wall", "ceiling", "interior", "indoor", "inside", "home", "office"]):
+            env_type = "interior"
+        elif any(w in vd_lower for w in ["city", "street", "urban", "building", "skyscraper", "traffic"]):
+            env_type = "urban"
+        elif any(w in vd_lower for w in ["cloud", "sky", "field", "forest", "mountain", "ocean", "nature", "landscape", "outdoor"]):
+            env_type = "nature" if any(w in vd_lower for w in ["forest", "mountain", "ocean", "field", "nature"]) else "exterior"
+        elif any(w in vd_lower for w in ["cosmos", "stars", "galaxy", "space", "infinite", "universe"]):
+            env_type = "cosmic"
+        elif any(w in vd_lower for w in ["abstract", "geometry", "pattern", "void"]):
+            env_type = "abstract"
 
-        # Time hints
-        if any(w in voiceover_lower for w in ["morning", "sunrise", "dawn"]):
-            cues["time_hints"].append("morning")
-        elif any(w in voiceover_lower for w in ["evening", "sunset", "dusk"]):
-            cues["time_hints"].append("evening")
-        elif any(w in voiceover_lower for w in ["night", "dark", "midnight"]):
-            cues["time_hints"].append("night")
+        # Fallback to voiceover if visual_description gave nothing
+        if not env_type:
+            if any(w in vo_lower for w in ["city", "street"]):
+                env_type = "urban"
+            elif any(w in vo_lower for w in ["nature", "forest", "mountain"]):
+                env_type = "nature"
+            elif any(w in vo_lower for w in ["office", "home", "room"]):
+                env_type = "interior"
+
+        if env_type:
+            cues["llm_environment_type"] = env_type
+            indoor_map = {"interior": "indoor", "urban": "outdoor", "nature": "outdoor",
+                          "exterior": "outdoor", "cosmic": "abstract", "abstract": "abstract"}
+            cues["environment_hints"].append(indoor_map.get(env_type, "indoor"))
+
+        # ── Time of day (visual_description first) ────────────────────────────
+        tod = ""
+        if any(w in vd_lower for w in ["golden hour", "golden light", "warm light", "sunset", "sunrise"]):
+            tod = "golden_hour"
+        elif any(w in vd_lower for w in ["night", "dark", "city lights", "neon", "midnight"]):
+            tod = "night"
+        elif any(w in vd_lower for w in ["morning", "dawn", "early"]):
+            tod = "morning"
+        elif any(w in vd_lower for w in ["overcast", "grey", "gray", "cloudy", "rain"]):
+            tod = "overcast"
+        elif any(w in vd_lower for w in ["dusk", "twilight"]):
+            tod = "dusk"
+        elif any(w in vd_lower for w in ["midday", "noon", "bright", "sun"]):
+            tod = "midday"
+        elif any(w in vd_lower for w in ["cloud", "clarity", "parting"]):
+            tod = "overcast"
+
+        if not tod:
+            if any(w in vo_lower for w in ["morning", "sunrise", "dawn"]):
+                tod = "morning"
+            elif any(w in vo_lower for w in ["evening", "sunset", "dusk"]):
+                tod = "golden_hour"
+            elif any(w in vo_lower for w in ["night", "dark", "midnight"]):
+                tod = "night"
+
+        if tod:
+            cues["llm_time_of_day"] = tod
+            cues["time_hints"].append(tod.replace("_", " "))
+
+        # ── Key visual elements from visual_description ───────────────────────
+        element_patterns = [
+            ("window", "window"),
+            ("rain", "rain on glass"),
+            ("city light", "blurred city lights"),
+            ("cloud", "clouds"),
+            ("sunlight", "rays of sunlight"),
+            ("warm light", "warm light"),
+            ("shadow", "shadows"),
+            ("face", "close-up face"),
+            ("silhouette", "silhouette"),
+            ("forest", "trees and foliage"),
+            ("ocean", "ocean waves"),
+            ("mountain", "mountain landscape"),
+            ("street", "city street"),
+            ("office", "office environment"),
+            ("book", "books"),
+            ("sky", "open sky"),
+        ]
+        elements = []
+        for pattern, label in element_patterns:
+            if pattern in vd_lower:
+                elements.append(label)
+        if elements:
+            cues["llm_key_elements"] = elements[:5]
 
         return cues
 
@@ -508,6 +679,13 @@ class NanoBananaPromptGenerator:
             enhancement = tone_enhancements.get(tone, "")
             full_description = f"{subject_description}, {enhancement}" if enhancement else subject_description
 
+        # Only enforce no-people when we fell back to random beat picks.
+        # When visual_description is provided, Claude already made that decision.
+        if visual_description and visual_description.strip():
+            additional_notes = "cinematic, photorealistic. Follow the visual description faithfully."
+        else:
+            additional_notes = "cinematic abstract visual, NO PEOPLE, NO FACES, NO HUMAN FIGURES. Focus on symbolic imagery, textures, and atmosphere."
+
         return SubjectSpec(
             count=1,
             subject_type="environment",
@@ -519,7 +697,7 @@ class NanoBananaPromptGenerator:
             pose=full_description,
             action="subtle atmospheric movement, dust motes or gentle light shifts",
             skin_texture="",
-            additional_notes="cinematic abstract visual, NO PEOPLE, NO FACES, NO HUMAN FIGURES. Focus on symbolic imagery, textures, and atmosphere.",
+            additional_notes=additional_notes,
         )
 
     def _generate_person_subject(
@@ -578,22 +756,72 @@ class NanoBananaPromptGenerator:
         visual_cues: dict,
         prior_scene: Optional[ScenePromptSpec],
     ) -> EnvironmentSpec:
-        """Generate environment specification."""
-        # Environment hints from cues
+        """Generate environment specification.
+
+        Uses LLM-extracted fields (llm_environment_type, llm_time_of_day,
+        llm_key_elements) when available; falls back to keyword hints otherwise.
+        """
+        # ── LLM path ──────────────────────────────────────────────────────────
+        llm_env_type = visual_cues.get("llm_environment_type", "")
+        llm_tod      = visual_cues.get("llm_time_of_day", "")
+        llm_elements = visual_cues.get("llm_key_elements", [])
+
+        if llm_env_type:
+            env_type_map = {
+                "interior": ("indoor",    "interior space"),
+                "exterior": ("outdoor",   "outdoor environment"),
+                "nature":   ("outdoor",   "natural landscape with organic textures"),
+                "urban":    ("outdoor",   "urban environment with architectural elements"),
+                "abstract": ("abstract",  "abstract visual space"),
+                "cosmic":   ("abstract",  "cosmic or infinite space"),
+            }
+            indoor_outdoor, location_type = env_type_map.get(
+                llm_env_type, ("indoor", "interior space")
+            )
+
+            tod_map = {
+                "golden_hour": TimeOfDay.GOLDEN_HOUR,
+                "morning":     TimeOfDay.MORNING,
+                "night":       TimeOfDay.NIGHT,
+                "midday":      TimeOfDay.MIDDAY,
+                "overcast":    TimeOfDay.OVERCAST,
+                "unspecified": TimeOfDay.GOLDEN_HOUR,
+            }
+            time_of_day = tod_map.get(llm_tod, TimeOfDay.GOLDEN_HOUR)
+
+            key_objects = llm_elements if llm_elements else ["carefully placed contextual elements"]
+            atmosphere_map = {
+                "striking": "crisp air with high visibility",
+                "moody": "slightly hazy with depth atmosphere",
+                "transitional": "clearing atmosphere",
+                "building": "energetic clear atmosphere",
+                "resolved": "warm diffused atmosphere",
+                "inviting": "welcoming atmospheric clarity",
+            }
+            mood = random.choice(profile.environment_moods)
+            atmosphere = atmosphere_map.get(mood, "natural atmosphere")
+
+            return EnvironmentSpec(
+                indoor_outdoor=indoor_outdoor,
+                location_type=location_type,
+                key_objects=key_objects,
+                background_elements="soft blurred background with depth, subtle environmental details",
+                time_of_day=time_of_day,
+                weather="",
+                atmosphere=atmosphere,
+            )
+
+        # ── Keyword fallback path ──────────────────────────────────────────────
         env_hints = visual_cues.get("environment_hints", [])
 
-        # Default to indoor modern space
         indoor_outdoor = "indoor"
-        if "outdoor" in env_hints:
-            indoor_outdoor = "outdoor"
-        elif "natural" in env_hints:
+        if "outdoor" in env_hints or "natural" in env_hints:
             indoor_outdoor = "outdoor"
 
-        # Location type based on hints and mood
         location_types = {
-            "urban": "modern city environment with architectural elements",
-            "office": "contemporary minimalist office space with clean lines",
-            "home": "warm residential interior with personal touches",
+            "urban":   "modern city environment with architectural elements",
+            "office":  "contemporary minimalist office space with clean lines",
+            "home":    "warm residential interior with personal touches",
             "natural": "natural landscape with organic textures",
         }
         location_type = "contemporary interior space with soft furnishings"
@@ -602,7 +830,6 @@ class NanoBananaPromptGenerator:
                 location_type = location_types[hint]
                 break
 
-        # Time of day
         time_hints = visual_cues.get("time_hints", [])
         if "morning" in time_hints:
             time_of_day = TimeOfDay.MORNING
@@ -611,9 +838,8 @@ class NanoBananaPromptGenerator:
         elif "night" in time_hints:
             time_of_day = TimeOfDay.NIGHT
         else:
-            time_of_day = TimeOfDay.GOLDEN_HOUR  # Default to golden hour for visual appeal
+            time_of_day = TimeOfDay.GOLDEN_HOUR
 
-        # Atmosphere based on beat mood
         atmosphere_map = {
             "striking": "crisp air with high visibility",
             "moody": "slightly hazy with depth atmosphere",
