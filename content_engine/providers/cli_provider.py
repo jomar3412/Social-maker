@@ -547,7 +547,28 @@ For each beat (HOOK, TENSION, SHIFT, CLIMB, RESOLUTION, CTA), provide:
 - beat_type: The beat name (HOOK, TENSION, SHIFT, CLIMB, RESOLUTION, CTA)
 - voiceover_segment: ONLY the script portion for THIS beat (NOT the full script)
 - duration: Seconds (3-10s) proportional to segment length
-- visual_description: Detailed visual matching this segment
+- visual_description: A specific, emotionally grounded scene description. Follow these rules:
+  - Start from the EMOTION or FEELING in the script segment, not the literal words
+  - Ask: what does a person LOOK LIKE when they feel this? What situation creates this feeling?
+  - Write what a viewer would instantly recognize as "that's me" or "I know that feeling"
+  - Be concrete and human: real situations, real body language, real environments
+  - For environment-only visuals (no people): describe a physical space or object that EMBODIES the feeling — not a symbol of it
+  - NEVER use abstract symbols (floating keys, cracked mirrors, lone flames) unless the script is explicitly philosophical or abstract
+  - NEVER describe the script metaphorically — describe what you would FILM
+  - Length: 1-2 sentences maximum, present tense, as if directing a camera operator
+
+  EXAMPLES:
+  Script: "You've been waiting for the right moment. The right job."
+  BAD: "Ancient key floating in beam of light symbolizing opportunity"
+  GOOD: "Person sitting at a desk staring at an open laptop, cursor blinking on an unsent application, coffee gone cold beside them"
+
+  Script: "Your brain is literally rewiring itself right now"
+  BAD: "Glowing neural network visualization in abstract space"
+  GOOD: "Extreme close-up of a person's eye, pupils slowly dilating, soft focus light shifting around them as if the world is subtly changing"
+
+  Script: "You are 99.9% empty space"
+  BAD: "Particles floating in void"
+  GOOD: "Person holds out their hand and stares at it, fingers slightly spread, expression shifting from confusion to wonder — the ordinary suddenly strange"
 - search_tight: Specific stock search query
 - search_broad: General stock search query
 - negative_search: Terms to exclude ["text overlay", "watermark", "logo"]
