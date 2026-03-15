@@ -265,6 +265,7 @@ class NanoBananaPromptGenerator:
         prior_scene_spec: Optional[ScenePromptSpec] = None,
         overlay_text: Optional[str] = None,
         custom_guidance: Optional[str] = None,
+        visual_description: Optional[str] = None,
     ) -> ScenePromptSpec:
         """
         Generate a complete ScenePromptSpec for a scene.
@@ -276,6 +277,8 @@ class NanoBananaPromptGenerator:
             prior_scene_spec: Previous scene's spec for continuity
             overlay_text: Text overlay if any
             custom_guidance: Additional generation guidance
+            visual_description: Claude-written visual concept from shot list.
+                When provided, used as the subject instead of random beat picks.
 
         Returns:
             Complete ScenePromptSpec with all visual details
@@ -287,7 +290,7 @@ class NanoBananaPromptGenerator:
 
         # Generate each specification component
         camera = self._generate_camera_spec(profile, visual_cues, scene_number)
-        subject = self._generate_subject_spec(profile, visual_cues, prior_scene_spec)
+        subject = self._generate_subject_spec(profile, visual_cues, prior_scene_spec, visual_description)
         environment = self._generate_environment_spec(profile, visual_cues, prior_scene_spec)
         lighting = self._generate_lighting_spec(profile, visual_cues)
         color_style = self._generate_color_style_spec(profile, visual_cues)
@@ -449,12 +452,13 @@ class NanoBananaPromptGenerator:
         profile: BeatVisualProfile,
         visual_cues: dict,
         prior_scene: Optional[ScenePromptSpec],
+        visual_description: Optional[str] = None,
     ) -> SubjectSpec:
         """Generate subject specification based on visual strategy."""
 
         # ENVIRONMENT strategy: abstract/metaphor subjects, NO PEOPLE
         if self.visual_strategy == VisualStrategy.ENVIRONMENT:
-            return self._generate_environment_subject(profile, visual_cues)
+            return self._generate_environment_subject(profile, visual_cues, visual_description)
 
         # PEOPLE strategy: human figures (original behavior)
         return self._generate_person_subject(profile, visual_cues, prior_scene)
@@ -463,44 +467,58 @@ class NanoBananaPromptGenerator:
         self,
         profile: BeatVisualProfile,
         visual_cues: dict,
+        visual_description: Optional[str] = None,
     ) -> SubjectSpec:
-        """Generate abstract/metaphor subject (NO PEOPLE)."""
+        """Generate abstract/metaphor subject (NO PEOPLE).
 
-        # Pick from environment_subjects for this beat type
-        if profile.environment_subjects:
-            subject_description = random.choice(profile.environment_subjects)
+        When visual_description is provided (Claude-written concept from the shot
+        list), use it directly as the subject instead of a random beat-type pick.
+        """
+
+        if visual_description and visual_description.strip():
+            # Use the Claude-written visual concept verbatim — it IS the subject.
+            # Still add a light tone enhancement for atmosphere.
+            tone = visual_cues.get("emotional_tone", "neutral")
+            tone_enhancements = {
+                "positive": "bathed in warm golden light",
+                "challenging": "cast in dramatic shadows",
+                "reflective": "soft diffused atmospheric light",
+                "neutral": "",
+            }
+            enhancement = tone_enhancements.get(tone, "")
+            full_description = f"{visual_description.strip()}, {enhancement}" if enhancement else visual_description.strip()
         else:
-            # Fallback abstract subjects
-            subject_description = random.choice([
-                "dramatic landscape with symbolic elements",
-                "abstract geometric composition",
-                "natural phenomenon with metaphorical significance",
-            ])
+            # Fallback: random pick from beat-type hardcoded list
+            if profile.environment_subjects:
+                subject_description = random.choice(profile.environment_subjects)
+            else:
+                subject_description = random.choice([
+                    "dramatic landscape with symbolic elements",
+                    "abstract geometric composition",
+                    "natural phenomenon with metaphorical significance",
+                ])
 
-        # Enhance based on emotional tone
-        tone = visual_cues.get("emotional_tone", "neutral")
-        tone_enhancements = {
-            "positive": "bathed in warm golden light, evoking hope and triumph",
-            "challenging": "cast in deep shadows, conveying weight and struggle",
-            "reflective": "soft diffused atmosphere, inviting contemplation",
-            "neutral": "balanced natural lighting, clean composition",
-        }
-        enhancement = tone_enhancements.get(tone, "")
-
-        # Combine description
-        full_description = f"{subject_description}, {enhancement}" if enhancement else subject_description
+            tone = visual_cues.get("emotional_tone", "neutral")
+            tone_enhancements = {
+                "positive": "bathed in warm golden light, evoking hope and triumph",
+                "challenging": "cast in deep shadows, conveying weight and struggle",
+                "reflective": "soft diffused atmosphere, inviting contemplation",
+                "neutral": "balanced natural lighting, clean composition",
+            }
+            enhancement = tone_enhancements.get(tone, "")
+            full_description = f"{subject_description}, {enhancement}" if enhancement else subject_description
 
         return SubjectSpec(
             count=1,
-            subject_type="environment",  # Not a person
-            age_range="",  # N/A for environment
-            gender_presentation="",  # N/A
-            wardrobe="",  # N/A
-            hair_style="",  # N/A
-            facial_expression="",  # N/A
-            pose=full_description,  # Use pose field for main description
+            subject_type="environment",
+            age_range="",
+            gender_presentation="",
+            wardrobe="",
+            hair_style="",
+            facial_expression="",
+            pose=full_description,
             action="subtle atmospheric movement, dust motes or gentle light shifts",
-            skin_texture="",  # N/A
+            skin_texture="",
             additional_notes="cinematic abstract visual, NO PEOPLE, NO FACES, NO HUMAN FIGURES. Focus on symbolic imagery, textures, and atmosphere.",
         )
 
@@ -802,6 +820,7 @@ def generate_nanobanana_prompt(
     overlay_text: Optional[str] = None,
     visual_strategy: str = "auto",
     niche: Optional[str] = None,
+    visual_description: Optional[str] = None,
 ) -> ScenePromptSpec:
     """
     Convenience function to generate a NanoBanana prompt.
@@ -817,14 +836,14 @@ def generate_nanobanana_prompt(
         overlay_text: Optional overlay text
         visual_strategy: "people", "environment", or "auto" (default)
         niche: Content niche (e.g., "motivation", "fun_facts")
-            For motivation niche, defaults to environment (no people)
+        visual_description: Claude-written visual concept from the shot list.
+            When provided, used as the subject instead of random beat-type picks.
 
     Returns:
         Complete ScenePromptSpec
     """
     level = PromptDetailLevel(detail_level.lower())
 
-    # Parse visual strategy
     strategy = VisualStrategy(visual_strategy.lower()) if visual_strategy else VisualStrategy.AUTO
 
     generator = NanoBananaPromptGenerator(
@@ -841,4 +860,5 @@ def generate_nanobanana_prompt(
         voiceover_segment=voiceover,
         prior_scene_spec=prior_scene_spec,
         overlay_text=overlay_text,
+        visual_description=visual_description,
     )

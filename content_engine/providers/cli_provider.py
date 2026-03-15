@@ -50,11 +50,14 @@ class CLIProvider(ContentProvider):
         """Check if the CLI tool is available."""
         try:
             # Check if command exists
+            env = os.environ.copy()
+            env.pop("CLAUDECODE", None)
             result = subprocess.run(
                 ["which", self.model],
                 capture_output=True,
                 text=True,
                 timeout=5,
+                env=env,
             )
             if result.returncode != 0:
                 # Try common paths
@@ -105,12 +108,15 @@ class CLIProvider(ContentProvider):
                 )
                 cmd = shlex.split(template.format(prompt=prompt))
 
+            env = os.environ.copy()
+            env.pop("CLAUDECODE", None)
             result = subprocess.run(
                 cmd,
                 capture_output=True,
                 text=True,
                 timeout=timeout,
                 cwd=os.getcwd(),
+                env=env,
             )
 
             return result.returncode == 0, result.stdout, result.stderr
@@ -367,6 +373,7 @@ class CLIProvider(ContentProvider):
                 detail_level="ultra",
                 niche=niche,
                 prior_scene_spec=prior_spec,
+                visual_description=scene.get("visual_description", ""),
             )
             specs.append(spec)
             prior_spec = spec
